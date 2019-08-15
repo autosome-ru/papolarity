@@ -40,7 +40,7 @@ for gene_id, gene in genes.items():
         strand = exons[0].strand
 
         if strand == '+':
-            # genomic coordinate
+            # genomic coordinates
             cds_start = min([rec.start for rec in cds_segments])
             len_exons_before_cds = sum(  (exon.end - exon.start + 1) for exon in exons  if exon.end < cds_start  )
             exons_with_cds = [exon for exon in exons  if exon.start <= cds_start <= exon.end]
