@@ -8,8 +8,8 @@ def get_transcript_id(rec):
 genes = {}
 transcripts_by_gene = defaultdict(list)
 parts_by_transcript = defaultdict(list)
-# for rec in parse_gtf('gencode.vM22.basic.annotation.gtf.gz'):
-for rec in parse_gtf('annotation_sample.gtf'):
+for rec in parse_gtf('gencode.vM22.basic.annotation.gtf.gz'):
+#for rec in parse_gtf('annotation_sample.gtf'):
     if rec.attributes['gene_type'] != 'protein_coding':
         continue
 
@@ -28,16 +28,6 @@ for rec in parse_gtf('annotation_sample.gtf'):
             transcript_id = rec.attributes['transcript_id']
             parts_by_transcript[transcript_id].append(rec)
 
-# # print(genes['ENSMUSG00000025900.12'])
-# for transcript in transcripts_by_gene['ENSMUSG00000025900.12']:
-#     print('-----------')
-#     print(transcript_id)
-#     print('-----------')
-#     transcript_id = transcript.attributes['transcript_id']
-#     for rec in parts_by_transcript[transcript_id]:
-#         print(rec.contig, rec.start, rec.end, rec.attributes['exon_id'], '.', rec.strand, sep='\t')
-
-
 for gene_id, gene in genes.items():
     for transcript in transcripts_by_gene[gene_id]:
         transcript_id = transcript.attributes['transcript_id']
@@ -45,14 +35,10 @@ for gene_id, gene in genes.items():
 
         exons = [part for part in parts if part.type == 'exon']
         cds_segments = [part for part in parts if part.type == 'CDS']
-        # cds_len = sum([rec.end - rec.start + 1  for rec in cds_segments])
         if len( { segment.strand for segment in (exons + cds_segments) } ) != 1:
             raise Exception('Different strands')
         strand = exons[0].strand
-        # print(gene_id, transcript_id)
-        # for exon in sorted(exons, key=lambda rec: rec.start):
-        #     print(exon)
-        # sorted(exons, key=lambda rec: rec.start)
+
         if strand == '+':
             # genomic coordinate
             cds_start = min([rec.start for rec in cds_segments])
