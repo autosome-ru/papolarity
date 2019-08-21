@@ -8,8 +8,8 @@ def get_transcript_id(rec):
 genes = {}
 transcripts_by_gene = defaultdict(list)
 parts_by_transcript = defaultdict(list)
-for rec in parse_gtf('gencode.vM22.basic.annotation.gtf.gz'):
-#for rec in parse_gtf('annotation_sample.gtf'):
+# for rec in parse_gtf('gencode.vM22.basic.annotation.gtf.gz'):
+for rec in parse_gtf('annotation_large_sample.gtf'):
     if rec.attributes['gene_type'] != 'protein_coding':
         continue
 
@@ -33,7 +33,7 @@ for gene_id, gene in genes.items():
         transcript_id = transcript.attributes['transcript_id']
         parts = parts_by_transcript[transcript_id]
 
-        exons = [part for part in parts if part.type == 'exon']
+        exons = [part   for part in parts   if part.type == 'exon']
         cds_segments = [part for part in parts if part.type == 'CDS']
         if len( { segment.strand for segment in (exons + cds_segments) } ) != 1:
             raise Exception('Different strands')
@@ -51,7 +51,10 @@ for gene_id, gene in genes.items():
             exon_with_cds = exons_with_cds[0]
             len_exon_with_cds = cds_start - exon_with_cds.start + 1 
             cds_start_transcript = len_exon_with_cds + len_exons_before_cds
-            print(transcript_id, cds_start_transcript, sep='\t')
-
+            # print(transcript_id, cds_start_transcript, sep='\t')
             # ToDo: посчитать cds_stop_transcript
         # ToDo: посчитать start и stop для отрицательной нитки
+
+        len_transcript = sum((exon.end - exon.start + 1) for exon in exons)
+        len_cds_in_transcript = sum((cds.end - cds.start + 1) for cds in cds_segments)
+        print(gene_id, transcript_id, len_transcript, len_cds_in_transcript, sep='\t')

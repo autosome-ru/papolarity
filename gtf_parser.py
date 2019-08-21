@@ -7,6 +7,9 @@ import json
 
 gff_info_fields = ["contig", "source", "type", "start", "end", "score", "strand", "phase", "attributes"]
 class GTFRecord(namedtuple("GFFRecord", gff_info_fields)):
+    def length(self):
+        return self.end - self.start + 1
+
     def __repr__(self):
         row = [self.contig, self.source, self.type, self.start, self.end, self.score, self.strand, self.phase, encode_gtf_attributes(self.attributes)]
         row = [elem if elem else '.'  for elem in row]
@@ -61,5 +64,3 @@ def parse_gtf_attributes(attribute_string):
         else:
             ret[key] = int(value)
     return ret
-
-
