@@ -7,7 +7,7 @@ index_fn = os.path.abspath(bam_fn) + '.bai'
 if not os.path.isfile(index_fn):
     pysam.index(bam_fn)
 
-samfile = pysam.AlignmentFile(bam_fn, "rb", index_filename=index_fn)
+samfile = pysam.AlignmentFile(bam_fn, "rb")
 transcripts = { read.reference_name for read in samfile }
 for transcript in transcripts:
     for reads_at_pos in samfile.pileup(transcript):
