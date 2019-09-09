@@ -6,7 +6,8 @@ import json
 # import urllib.request, urllib.parse, urllib.error
 
 gff_info_fields = ["contig", "source", "type", "start", "end", "score", "strand", "phase", "attributes"]
-class GTFRecord(namedtuple("GFFRecord", gff_info_fields)):
+class GTFRecord(namedtuple("GTFRecord", gff_info_fields)):
+    @property
     def length(self):
         return self.end - self.start + 1
 
@@ -15,13 +16,35 @@ class GTFRecord(namedtuple("GFFRecord", gff_info_fields)):
         row = [elem if elem else '.'  for elem in row]
         return '\t'.join(map(str, row))
 
+    def is_coding(self):
+        if self.attributes['gene_type'] != 'protein_coding':
+            return False
+        if (self.type != 'gene') and (self.attributes['transcript_type'] != 'protein_coding'):
+            return False
+        return True
+
+    def contain_position(self, pos):
+        return self.start <= pos <= self.end
+
+    def in_upstream_of(self, pos):
+        if self.strand == '+':
+            return self.end < pos
+        elif self.strand == '-':
+            return pos < self.start
+
+    def in_downstream_of(self, pos):
+        if self.strand == '+':
+            return pos < self.start
+        elif self.strand == '-':
+            return self.end < pos
+
 def encode_gtf_attributes(attributes):
     if not attributes:
         return '.'
     attr_strings = [f'{k} {json.dumps(v)};' for k,v in attributes.items()]
     return ' '.join(attr_strings)
 
-def parse_gtf(filename):
+def parse_gtf(filename, attributes_filter=lambda x: x):
     """
     A minimalistic GTF format parser.
     Yields objects that contain info about a single GTF feature.
@@ -36,17 +59,22 @@ def parse_gtf(filename):
             parts = line.strip().split("\t")
             # If this fails, the file format is not standard-compatible
             assert len(parts) == len(gff_info_fields)
+            assert parts[0] != '.'  # contig
+            assert parts[2] != '.'  # type
+            assert parts[3] != '.'  # start
+            assert parts[4] != '.'  # end
+            assert parts[6] in {'+', '-'}
             # Normalize data
             normalized_info = {
-                "contig": None if parts[0] == "." else parts[0],
+                "contig": parts[0],
                 "source": None if parts[1] == "." else parts[1],
-                "type": None if parts[2] == "." else parts[2],
-                "start": None if parts[3] == "." else int(parts[3]), # 1-based
-                "end": None if parts[4] == "." else int(parts[4]), # 1-based
+                "type":   parts[2],
+                "start":  int(parts[3]), # 1-based
+                "end":    int(parts[4]), # 1-based
                 "score": None if parts[5] == "." else float(parts[5]),
-                "strand": None if parts[6] == "." else parts[6],
+                "strand": parts[6],
                 "phase": None if parts[7] == "." else parts[7],
-                "attributes": parse_gtf_attributes(parts[8])
+                "attributes": attributes_filter(parse_gtf_attributes(parts[8]))
             }
             # Alternatively, you can emit the dictionary here, if you need mutability:
             #    yield normalizedInfo
@@ -57,10 +85,22 @@ def parse_gtf_attributes(attribute_string):
     if attribute_string == ".":
         return {}
     ret = {}
+    multivalue_keys = {'tag', 'ont'}
     for attribute in attribute_string.strip().rstrip(";").split(";"):
         key, value = attribute.strip().split(" ")
+
         if value[0] == '"':
-            ret[key] = value[1:-1]
+            val = value[1:-1]
         else:
-            ret[key] = int(value)
+            val = int(value)
+
+        if key not in multivalue_keys:
+            if key not in ret:
+                ret[key] = val
+            else:
+                raise Exception(f'Key `{key}` already in attributes')
+        else:
+            if key not in ret:
+                ret[key] = []
+            ret[key].append(val)
     return ret
