@@ -69,8 +69,8 @@ def parse_gtf(filename, attributes_filter=lambda x: x):
                 "contig": parts[0],
                 "source": None if parts[1] == "." else parts[1],
                 "type":   parts[2],
-                "start":  int(parts[3]), # 1-based
-                "end":    int(parts[4]), # 1-based
+                "start":  int(parts[3]) - 1, # 0-based
+                "end":    int(parts[4]) - 1, # 0-based
                 "score": None if parts[5] == "." else float(parts[5]),
                 "strand": parts[6],
                 "phase": None if parts[7] == "." else parts[7],
@@ -85,6 +85,7 @@ def parse_gtf_attributes(attribute_string):
     if attribute_string == ".":
         return {}
     ret = {}
+    # Some records has several attributes with the same key (like `tag`), we treat values for such keys as lists
     multivalue_keys = {'tag', 'ont'}
     for attribute in attribute_string.strip().rstrip(";").split(";"):
         key, value = attribute.strip().split(" ")

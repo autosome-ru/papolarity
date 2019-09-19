@@ -1,6 +1,7 @@
 from collections import defaultdict
 from collections import namedtuple
 from gtf_parser import *
+from coding_transcript_info import CodingTranscriptInfo
 
 class Annotation:
     def __init__(self):
@@ -54,6 +55,32 @@ class Annotation:
             raise Exception('Different strands')
         return segment_strands.pop()
 
+    def coding_transcript_info(self, transcript_id):
+        """Return coding transcript info. This method fails when called for non-coding transcript"""
+        gene_id = self.geneId_by_transcript[transcript_id]
+        exons = self.transcript_exons(transcript_id)
+        cds_segments = self.transcript_cds(transcript_id)
+        strand = self.transcript_strand(transcript_id)
+
+        transcript_length = sum(exon.length for exon in exons)
+        len_cds_in_transcript = sum(cds.length for cds in cds_segments)
+        if strand == '+':
+            genomic_cds_start = min([rec.start for rec in cds_segments])
+            len_exons_before_cds = sum( exon.length  for exon in exons  if exon.in_upstream_of(genomic_cds_start) )
+            exon_with_cds = take_the_only([exon for exon in exons  if exon.contain_position(genomic_cds_start)])
+            cds_offset = genomic_cds_start - exon_with_cds.start  # offset of CDS relative to embracing exon
+        elif strand == '-':
+            genomic_cds_start = max([rec.end for rec in cds_segments])
+            len_exons_before_cds = sum( exon.length  for exon in exons  if exon.in_upstream_of(genomic_cds_start) )
+            exon_with_cds = take_the_only([exon for exon in exons  if exon.contain_position(genomic_cds_start)])
+            cds_offset = exon_with_cds.end - genomic_cds_start  # offset of CDS relative to embracing exon
+
+        cds_start = cds_offset + len_exons_before_cds
+        cds_stop = cds_start + len_cds_in_transcript - 1
+
+        return CodingTranscriptInfo(gene_id, transcript_id, transcript_length, cds_start, cds_stop)
+
+
 # take only elements related to coding transcripts of coding genes
 def filter_coding(iter):
     for rec in iter:
@@ -66,34 +93,3 @@ def take_the_only(arr):
     if len(arr) == 0:
         raise Exception('No elements when one is expected')
     return arr[0]
-
-
-class TranscriptInfo(namedtuple("TranscriptInfo", ['transcript_id', 'gene_id', 'transcript_length', 'cds_start', 'cds_stop'])):
-    @property
-    def cds_length(self):
-        return self.cds_stop - self.cds_start + 1
-
-def coding_transcript_infos(annotation):
-    for transcript_id in annotation.transcript_by_id:
-        gene_id = annotation.geneId_by_transcript[transcript_id]
-        exons = annotation.transcript_exons(transcript_id)
-        cds_segments = annotation.transcript_cds(transcript_id)
-        strand = annotation.transcript_strand(transcript_id)
-
-        transcript_length = sum(exon.length for exon in exons)
-        len_cds_in_transcript = sum(cds.length for cds in cds_segments)
-        if strand == '+':
-            genomic_cds_start = min([rec.start for rec in cds_segments])
-            len_exons_before_cds = sum( exon.length  for exon in exons  if exon.in_upstream_of(genomic_cds_start) )
-            exon_with_cds = take_the_only([exon for exon in exons  if exon.contain_position(genomic_cds_start)])
-            cds_offset = genomic_cds_start - exon_with_cds.start + 1  # offset of CDS relative to embracing exon
-        elif strand == '-':
-            genomic_cds_start = max([rec.end for rec in cds_segments])
-            len_exons_before_cds = sum( exon.length  for exon in exons  if exon.in_upstream_of(genomic_cds_start) )
-            exon_with_cds = take_the_only([exon for exon in exons  if exon.contain_position(genomic_cds_start)])
-            cds_offset = exon_with_cds.end - genomic_cds_start + 1   # offset of CDS relative to embracing exon
-
-        cds_start = cds_offset + len_exons_before_cds
-        cds_stop = cds_start + len_cds_in_transcript - 1
-
-        yield TranscriptInfo(transcript_id, gene_id, transcript_length, cds_start, cds_stop)
