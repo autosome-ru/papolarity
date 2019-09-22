@@ -93,3 +93,7 @@ def take_the_only(arr):
     if len(arr) == 0:
         raise Exception('No elements when one is expected')
     return arr[0]
+
+def load_transcript_cds_info(cds_annotation_filename):
+    transcript_infos = CodingTranscriptInfo.each_from_file(cds_annotation_filename)
+    return {tr_info.transcript_id: tr_info  for tr_info in transcript_infos}

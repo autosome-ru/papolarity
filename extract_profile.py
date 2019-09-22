@@ -2,12 +2,7 @@ import pybedtools
 import itertools
 import numpy as np
 import sys
-from annotation import CodingTranscriptInfo
-
-def load_transcript_cds_info(cds_annotation_filename):
-    transcript_infos = CodingTranscriptInfo.each_from_file(cds_annotation_filename)
-    return {tr_info.transcript_id: tr_info  for tr_info in transcript_infos}
-
+from annotation import CodingTranscriptInfo, load_transcript_cds_info
 
 def transcript_coverages_in_file(alignment_filename, cds_info_by_transcript, sort_transcripts=False):
     bam = pybedtools.BedTool(alignment_filename)
