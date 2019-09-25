@@ -2,7 +2,7 @@ import sys
 import sklearn.linear_model
 from annotation import load_transcript_cds_info
 from coverage_profile import transcript_coverages_in_file
-from pooling import join_sorted, pooling
+from pooling import starjoin_sorted, pooling
 import pasio_wrapper
 import numpy as np
 import math
@@ -37,7 +37,7 @@ alignment_2_fn = sys.argv[3]
 coverages_1_iter = transcript_coverages_in_file(alignment_1_fn, cds_info_by_transcript, sort_transcripts=True)
 coverages_2_iter = transcript_coverages_in_file(alignment_2_fn, cds_info_by_transcript, sort_transcripts=True)
 
-for (transcript_info, (_, coverage_1), (_, coverage_2)) in join_sorted(coverages_1_iter, coverages_2_iter, key=lambda txinfo_and_coverage: txinfo_and_coverage[0]):
+for (transcript_info, (_, coverage_1), (_, coverage_2)) in starjoin_sorted(coverages_1_iter, coverages_2_iter, key=lambda txinfo, coverage: txinfo):
     # print(transcript_info)
     cds_profile_1 = transcript_info.cds_profile(coverage_1)
     cds_profile_2 = transcript_info.cds_profile(coverage_2)
