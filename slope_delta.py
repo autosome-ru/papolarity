@@ -21,20 +21,6 @@ from pooling import join_sorted, pooling
 filename_1 = sys.argv[1]
 filename_2 = sys.argv[2]
 
-def get_transcript_id(rec):
-    return rec.attributes['transcript_id']
-
-CoveredPosition = namedtuple('CoveredPosition', ['contig', 'pos', 'coverage'])
-
-def parse_row(l):
-    contig, pos, coverage = l.strip().split("\t")
-    return CoveredPosition(contig, int(pos), int(coverage))
-
-def parse_coverages_file(filename):
-    with open(filename) as f:
-        for row in f:
-            yield parse_row(row)
-
 def coverages_in_bam(bam_fn):
     index_fn = os.path.abspath(bam_fn) + '.bai'
     if not os.path.isfile(index_fn):
@@ -58,16 +44,16 @@ def coverage_list(reads, contig_length):
     return profile
 
 
-def calculate_polarity_score(m):
-    total_m = 0
+def calculate_polarity_score(coverage):
+    total_coverage = 0
     numerator = 0
-    for i in range(len(m)):
-        total_m = total_m + m[i]
-        numerator += m[i] * i
-    if total_m == 0:
+    for i in range(len(coverage)):
+        total_coverage = total_coverage + coverage[i]
+        numerator += coverage[i] * i
+    if total_coverage == 0:
         return 0
-    polarity_score = numerator / total_m
-    normalized_score = (polarity_score * 2 / (len(m) - 1)) - 1
+    polarity_score = numerator / total_coverage
+    normalized_score = (polarity_score * 2 / (len(coverage) - 1)) - 1
     return normalized_score
 
 annotation = cds_annotation(load_annotation_parts('gencode.vM22.basic.annotation.gtf.gz'))

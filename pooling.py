@@ -19,11 +19,9 @@ def join_sorted(iter_1, iter_2, key=lambda x: x):
                 k_1 = key(obj_1)
                 k_2 = key(obj_2)
             elif k_1 < k_2:
-                # print(f'join_sorted - skip {k_1} from first iterator', file=sys.stderr)
                 obj_1 = next(iter_1)
                 k_1 = key(obj_1)
             elif k_1 > k_2:
-                # print(f'join_sorted - skip {k_2} from second iterator', file=sys.stderr)
                 obj_2 = next(iter_2)
                 k_2 = key(obj_2)
     except StopIteration:
