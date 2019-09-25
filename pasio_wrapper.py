@@ -44,7 +44,7 @@ def pasio_splitter():
             splitter = ReducerCombiner(reducer, NopSplitter(scorer_factory))
     return splitter
 
-def stabile_segments(profile, splitter):
+def stable_segments(profile, splitter):
     counts = np.array(profile)
     split_candidates = np.arange(len(counts) + 1)
     score, splits = splitter.split(counts, split_candidates)

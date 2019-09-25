@@ -14,7 +14,7 @@ def slope_by_profiles(cds_profile_1, cds_profile_2, pooled_cds_coverage, splitte
     xs = []
     ys = []
     sample_weights = []
-    for (start, stop, _mean_count) in pasio_wrapper.stabile_segments(pooled_cds_coverage, splitter):
+    for (start, stop, _mean_count) in pasio_wrapper.stable_segments(pooled_cds_coverage, splitter):
         mean_1 = np.mean(cds_profile_1[start:stop])
         mean_2 = np.mean(cds_profile_2[start:stop])
         coeff = ((mean_2 + 1) / (mean_1 + 1)) * ((total_coverage_1 + 1) / (total_coverage_2 + 1))
