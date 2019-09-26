@@ -70,10 +70,10 @@ class Annotation:
             exon_with_cds = take_the_only([exon for exon in exons  if exon.contain_position(genomic_cds_start)])
             cds_offset = genomic_cds_start - exon_with_cds.start  # offset of CDS relative to embracing exon
         elif strand == '-':
-            genomic_cds_start = max([rec.end for rec in cds_segments])
+            genomic_cds_start = max([rec.stop for rec in cds_segments])
             len_exons_before_cds = sum( exon.length  for exon in exons  if exon.in_upstream_of(genomic_cds_start) )
             exon_with_cds = take_the_only([exon for exon in exons  if exon.contain_position(genomic_cds_start)])
-            cds_offset = exon_with_cds.end - genomic_cds_start  # offset of CDS relative to embracing exon
+            cds_offset = exon_with_cds.stop - genomic_cds_start  # offset of CDS relative to embracing exon
 
         cds_start = cds_offset + len_exons_before_cds
         cds_stop = cds_start + len_cds_in_transcript - 1

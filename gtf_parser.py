@@ -5,14 +5,14 @@ import gzip
 import json
 # import urllib.request, urllib.parse, urllib.error
 
-gff_info_fields = ["contig", "source", "type", "start", "end", "score", "strand", "phase", "attributes"]
+gff_info_fields = ["contig", "source", "type", "start", "stop", "score", "strand", "phase", "attributes"]
 class GTFRecord(namedtuple("GTFRecord", gff_info_fields)):
     @property
     def length(self):
-        return self.end - self.start + 1
+        return self.stop - self.start + 1
 
     def __repr__(self):
-        row = [self.contig, self.source, self.type, self.start, self.end, self.score, self.strand, self.phase, encode_gtf_attributes(self.attributes)]
+        row = [self.contig, self.source, self.type, self.start, self.stop, self.score, self.strand, self.phase, encode_gtf_attributes(self.attributes)]
         row = [elem if elem else '.'  for elem in row]
         return '\t'.join(map(str, row))
 
@@ -24,11 +24,11 @@ class GTFRecord(namedtuple("GTFRecord", gff_info_fields)):
         return True
 
     def contain_position(self, pos):
-        return self.start <= pos <= self.end
+        return self.start <= pos <= self.stop
 
     def in_upstream_of(self, pos):
         if self.strand == '+':
-            return self.end < pos
+            return self.stop < pos
         elif self.strand == '-':
             return pos < self.start
 
@@ -36,7 +36,7 @@ class GTFRecord(namedtuple("GTFRecord", gff_info_fields)):
         if self.strand == '+':
             return pos < self.start
         elif self.strand == '-':
-            return self.end < pos
+            return self.stop < pos
 
 def encode_gtf_attributes(attributes):
     if not attributes:
@@ -62,7 +62,7 @@ def parse_gtf(filename, attributes_filter=lambda x: x):
             assert parts[0] != '.'  # contig
             assert parts[2] != '.'  # type
             assert parts[3] != '.'  # start
-            assert parts[4] != '.'  # end
+            assert parts[4] != '.'  # stop
             assert parts[6] in {'+', '-'}
             # Normalize data
             normalized_info = {
@@ -70,7 +70,7 @@ def parse_gtf(filename, attributes_filter=lambda x: x):
                 "source": None if parts[1] == "." else parts[1],
                 "type":   parts[2],
                 "start":  int(parts[3]) - 1, # 0-based
-                "end":    int(parts[4]) - 1, # 0-based
+                "stop":    int(parts[4]) - 1, # 0-based
                 "score": None if parts[5] == "." else float(parts[5]),
                 "strand": parts[6],
                 "phase": None if parts[7] == "." else parts[7],

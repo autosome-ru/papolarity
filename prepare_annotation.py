@@ -42,8 +42,8 @@ for gene_id, gene in genes.items():
         if strand == '+':
             # genomic coordinates
             cds_start = min([rec.start for rec in cds_segments])
-            len_exons_before_cds = sum(  (exon.end - exon.start + 1) for exon in exons  if exon.end < cds_start  )
-            exons_with_cds = [exon for exon in exons  if exon.start <= cds_start <= exon.end]
+            len_exons_before_cds = sum(  (exon.stop - exon.start + 1) for exon in exons  if exon.stop < cds_start  )
+            exons_with_cds = [exon for exon in exons  if exon.start <= cds_start <= exon.stop]
             if len(exons_with_cds) > 1:
                 raise Exception('Several exons contain CDS start simultaneously')
             if len(exons_with_cds) == 0:
@@ -55,6 +55,6 @@ for gene_id, gene in genes.items():
             # ToDo: посчитать cds_stop_transcript
         # ToDo: посчитать start и stop для отрицательной нитки
 
-        len_transcript = sum((exon.end - exon.start + 1) for exon in exons)
-        len_cds_in_transcript = sum((cds.end - cds.start + 1) for cds in cds_segments)
+        len_transcript = sum((exon.stop - exon.start + 1) for exon in exons)
+        len_cds_in_transcript = sum((cds.stop - cds.start + 1) for cds in cds_segments)
         print(gene_id, transcript_id, len_transcript, len_cds_in_transcript, sep='\t')
