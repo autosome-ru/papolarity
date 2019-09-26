@@ -9,7 +9,7 @@ gff_info_fields = ["contig", "source", "type", "start", "stop", "score", "strand
 class GTFRecord(namedtuple("GTFRecord", gff_info_fields)):
     @property
     def length(self):
-        return self.stop - self.start + 1
+        return self.stop - self.start
 
     def __repr__(self):
         row = [self.contig, self.source, self.type, self.start, self.stop, self.score, self.strand, self.phase, encode_gtf_attributes(self.attributes)]
@@ -24,11 +24,11 @@ class GTFRecord(namedtuple("GTFRecord", gff_info_fields)):
         return True
 
     def contain_position(self, pos):
-        return self.start <= pos <= self.stop
+        return self.start <= pos < self.stop
 
     def in_upstream_of(self, pos):
         if self.strand == '+':
-            return self.stop < pos
+            return self.stop <= pos
         elif self.strand == '-':
             return pos < self.start
 
@@ -36,7 +36,7 @@ class GTFRecord(namedtuple("GTFRecord", gff_info_fields)):
         if self.strand == '+':
             return pos < self.start
         elif self.strand == '-':
-            return self.stop < pos
+            return self.stop <= pos
 
 def encode_gtf_attributes(attributes):
     if not attributes:
@@ -69,8 +69,8 @@ def parse_gtf(filename, attributes_filter=lambda x: x):
                 "contig": parts[0],
                 "source": None if parts[1] == "." else parts[1],
                 "type":   parts[2],
-                "start":  int(parts[3]) - 1, # 0-based
-                "stop":    int(parts[4]) - 1, # 0-based
+                "start":  int(parts[3]) - 1, # 0-based, included
+                "stop":   int(parts[4]),     # 0-based, excluded
                 "score": None if parts[5] == "." else float(parts[5]),
                 "strand": parts[6],
                 "phase": None if parts[7] == "." else parts[7],

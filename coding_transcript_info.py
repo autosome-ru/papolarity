@@ -24,7 +24,7 @@ class CodingTranscriptInfo(namedtuple("CodingTranscriptInfo", ['gene_id', 'trans
 
     @property
     def cds_length(self):
-        return self.cds_stop - self.cds_start + 1
+        return self.cds_stop - self.cds_start
     
     def cds_profile(self, profile):
-        return profile[self.cds_start : (self.cds_stop + 1)]
+        return profile[self.cds_start : self.cds_stop]
