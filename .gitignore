@@ -1,0 +1,12 @@
+*.pyc
+*.png
+*.txt
+*.tsv
+*.csv
+*.log
+*.bam
+*.bed
+*.sam
+.ipynb_checkpoints/
+source_data/
+tmp/
