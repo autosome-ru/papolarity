@@ -21,6 +21,9 @@ def profile_by_bedgraph(bedgraph_intervals_iter, transcript_length):
     for interval in bedgraph_intervals_iter:
         # Note! pybedtools use 0-based coordinates (when in integer representation).
         # See https://daler.github.io/pybedtools/3-brief-examples.html and https://daler.github.io/pybedtools/intervals.html#zero-based-coords
-        coverage = int(interval[3])
+        try:
+            coverage = int(interval[3])
+        except:
+            coverage = int(float(interval[3])) # 1.2345e6
         profile[interval.start : interval.stop] = coverage
     return profile
