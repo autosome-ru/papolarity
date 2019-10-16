@@ -45,15 +45,14 @@ def slope_by_profiles(control_profile, experiment_profile, segments):
     slope = model.coef_[0]
     return slope
 
-def compare_profiles(transcript_info, coverage_control, coverage_experiment, drop_start_stop=True):
+# flank length of 15nt ~= half-ribosome (~half of riboseq footprint length)
+def compare_profiles(transcript_info, coverage_control, coverage_experiment, drop_start_flank=15, drop_stop_flank=15):
     cds_profile_control = transcript_info.cds_profile(coverage_control)
     cds_profile_experiment = transcript_info.cds_profile(coverage_experiment)
 
     # start and stop codon can have piles of reads, so we usually want to drop them
-    if drop_start_stop:
-        flank = 15  # half-ribosome (~half of riboseq footprint length)
-        cds_profile_control = cds_profile_control[flank:-flank]
-        cds_profile_experiment = cds_profile_experiment[flank:-flank]
+    cds_profile_control = cds_profile_control[drop_start_flank:-drop_stop_flank]
+    cds_profile_experiment = cds_profile_experiment[drop_start_flank:-drop_stop_flank]
     pooled_cds_coverage = pooling([cds_profile_control, cds_profile_experiment])
     if len(pooled_cds_coverage) == 0:
         return None
@@ -66,8 +65,8 @@ def compare_profiles(transcript_info, coverage_control, coverage_experiment, dro
     info = {
         'transcript_info': transcript_info,
         'slope': slope,
-        'control_cds_mean': np.mean(cds_profile_control), 'experiment_cds_mean': np.mean(cds_profile_experiment),
-        'polarity_score_control': polarity_score(cds_profile_control), 'polarity_score_experiment': polarity_score(cds_profile_experiment),
+        'control_mean_coverage': np.mean(cds_profile_control), 'experiment_mean_coverage': np.mean(cds_profile_experiment),
+        'control_polarity_score': polarity_score(cds_profile_control), 'experiment_polarity_score': polarity_score(cds_profile_experiment),
     }
     return info
 
@@ -79,7 +78,7 @@ def compare_multiple_alignments(cds_info_by_transcript, alignment_control, align
         if transcript_id not in cds_info_by_transcript:
             continue
         transcript_info = cds_info_by_transcript[transcript_id]
-        info = compare_profiles(transcript_info, coverage_control, coverage_experiment, drop_start_stop=True)
+        info = compare_profiles(transcript_info, coverage_control, coverage_experiment, drop_start_flank=15, drop_stop_flank=15)
         if info:
             yield info
 
@@ -97,8 +96,8 @@ alignment_experiment = BedTool(alignment_experiment_fn)
 header = [
     'gene_id', 'transcript_id', 'transcript_length', 'cds_start', 'cds_stop',
     'slope',
-    'control_cds_mean', 'experiment_cds_mean',
-    'polarity_score_control', 'polarity_score_experiment',
+    'control_mean_coverage', 'experiment_mean_coverage',
+    'control_polarity_score', 'experiment_polarity_score',
 ]
 
 print('\t'.join(header))
@@ -107,7 +106,7 @@ for info in compare_multiple_alignments(cds_info_by_transcript, alignment_contro
     field_values = [
         info['transcript_info'],
         info['slope'],
-        info['control_cds_mean'], info['experiment_cds_mean'],
-        info['polarity_score_control'], info['polarity_score_experiment'],
+        info['control_mean_coverage'], info['experiment_mean_coverage'],
+        info['control_polarity_score'], info['experiment_polarity_score'],
     ]
     print(*field_values, sep='\t')
