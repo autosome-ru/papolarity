@@ -1,9 +1,11 @@
 from slope import CoverageComparisonStats, choose_best_transcript
 import sys
+import os
 import seaborn as sns
 import matplotlib.pyplot as plt
 
 filename = sys.argv[1]
+basename = os.path.splitext(filename)[0]
 slope_data = list(CoverageComparisonStats.each_in_file(filename))
 slope_data = [info for info in slope_data  if info.geom_mean_coverage() >= 10]
 slope_data = list(choose_best_transcript(slope_data))
@@ -18,17 +20,17 @@ plt.figure()
 sns.kdeplot(slopes)
 # plt.xlim(-0.02,0.02)
 plt.axvline(x=0, color='green')
-plt.savefig('slope.png')
+plt.savefig(f'{basename}_slope.png')
 
 plt.figure()
 sns.kdeplot(polarities_control, color='b')
 sns.kdeplot(polarities_experiment, color='r')
 # plt.xlim(-0.02,0.02)
 plt.axvline(x=0, color='green')
-plt.savefig('polarities.png')
+plt.savefig(f'{basename}_polarities.png')
 
 plt.figure()
 sns.kdeplot(polarity_deltas)
 # plt.xlim(-0.02,0.02)
 plt.axvline(x=0, color='green')
-plt.savefig('polarity_deltas.png')
+plt.savefig(f'{basename}_polarity_deltas.png')
