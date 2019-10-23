@@ -16,5 +16,6 @@ alignment_control = BedTool(alignment_control_fn)
 alignment_experiment = BedTool(alignment_experiment_fn)
 
 transcript_comparator = TranscriptComparator(cds_info_by_transcript, splitter, drop_start_flank=15, drop_stop_flank=15)
-infos = transcript_comparator.compare_multiple_alignments(alignment_control, alignment_experiment)
-CoverageComparisonStats.print(infos)
+transcript_comparison_infos = transcript_comparator.compare_multiple_alignments(alignment_control, alignment_experiment)
+transcript_comparison_infos = list(transcript_comparison_infos)
+CoverageComparisonStats.print(transcript_comparison_infos, extended=True)

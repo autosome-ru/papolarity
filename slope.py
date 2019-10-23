@@ -69,7 +69,7 @@ class CoverageComparisonStats(namedtuple('CoverageComparisonStats', coverage_sta
             control_mean_coverage, experiment_mean_coverage, \
             control_total_coverage, experiment_total_coverage, \
             control_polarity_score, experiment_polarity_score, \
-            num_segments = row
+            num_segments, *rest = row
         info = {
             'transcript_info': CodingTranscriptInfo(gene_id, transcript_id, int(transcript_length), int(cds_start), int(cds_stop)),
             'slope': float(slope),
@@ -100,13 +100,28 @@ class CoverageComparisonStats(namedtuple('CoverageComparisonStats', coverage_sta
                 yield cls.from_string(line)
 
     @classmethod
-    def print(cls, infos, file=sys.stdout):
-        print(cls.header(), file=file)
-        for info in infos:
-            print(info, file=file)
+    def print(cls, infos, file=sys.stdout, extended=False):
+        if extended:
+            infos = list(infos)
+            best_transcript_ids = set(info.transcript_id for info in choose_best_transcript(infos))
+
+            print(cls.header() + '\t' + '\t'.join(['geom_mean_coverage', 'polarity_difference', 'is_best_transcript']), file=file)
+            for info in infos:
+                if info.transcript_id in best_transcript_ids:
+                    is_best_transcript = '+'
+                else:
+                    is_best_transcript = '-'
+                print(str(info) + '\t' + '\t'.join(map(str, [info.geom_mean_coverage(), info.polarity_difference(), is_best_transcript])), file=file)
+        else:
+            print(cls.header(), file=file)
+            for info in infos:
+                print(info, file=file)
 
     def geom_mean_coverage(self):
         return (self.control_mean_coverage * self.experiment_mean_coverage) ** 0.5
+
+    def polarity_difference(self):
+        return self.experiment_polarity_score - self.control_polarity_score
 
 class TranscriptComparator:
     # start and stop codon can have piles of reads, so we usually want to drop them
