@@ -8,7 +8,7 @@ import pasio_wrapper
 from coverage_profile import transcript_coverages_in_file
 from pooling import starjoin_sorted, pooling
 import numpy as np
-from math import log
+from math import log, abs
 
 coverage_stats_fields = [
     'transcript_info', 'slope',
@@ -16,6 +16,7 @@ coverage_stats_fields = [
     'control_total_coverage', 'experiment_total_coverage',
     'control_polarity_score', 'experiment_polarity_score',
     'num_segments',
+    'multipoint_slope', 'profile_difference',
 ]
 class CoverageComparisonStats(namedtuple('CoverageComparisonStats', coverage_stats_fields)):
     @property
@@ -46,6 +47,7 @@ class CoverageComparisonStats(namedtuple('CoverageComparisonStats', coverage_sta
             self.control_total_coverage, self.experiment_total_coverage,
             self.control_polarity_score, self.experiment_polarity_score,
             self.num_segments,
+            self.multipoint_slope, self.profile_difference,
         ]
         return '\t'.join(map(str, fields))
 
@@ -58,6 +60,7 @@ class CoverageComparisonStats(namedtuple('CoverageComparisonStats', coverage_sta
             'control_total_coverage', 'experiment_total_coverage',
             'control_polarity_score', 'experiment_polarity_score',
             'num_segments',
+            'multipoint_slope', 'profile_difference',
         ]
         return '\t'.join(fields)
 
@@ -69,7 +72,9 @@ class CoverageComparisonStats(namedtuple('CoverageComparisonStats', coverage_sta
             control_mean_coverage, experiment_mean_coverage, \
             control_total_coverage, experiment_total_coverage, \
             control_polarity_score, experiment_polarity_score, \
-            num_segments, *rest = row
+            num_segments, \
+            multipoint_slope, profile_difference, \
+            *rest = row
         info = {
             'transcript_info': CodingTranscriptInfo(gene_id, transcript_id, int(transcript_length), int(cds_start), int(cds_stop)),
             'slope': float(slope),
@@ -77,6 +82,8 @@ class CoverageComparisonStats(namedtuple('CoverageComparisonStats', coverage_sta
             'control_total_coverage': int(control_total_coverage), 'experiment_total_coverage': int(experiment_total_coverage),
             'control_polarity_score': float(control_polarity_score), 'experiment_polarity_score': float(experiment_polarity_score),
             'num_segments': int(num_segments),
+            'multipoint_slope': float(multipoint_slope),
+            'profile_difference': float(profile_difference),
         }
         return cls(**info)
 
@@ -84,11 +91,13 @@ class CoverageComparisonStats(namedtuple('CoverageComparisonStats', coverage_sta
     def make_from_profiles(cls, transcript_info, cds_profile_control, cds_profile_experiment, segments):
         info = {
             'transcript_info': transcript_info,
-            'slope': slope_by_profiles(cds_profile_control, cds_profile_experiment, segments),
+            'slope': slope_by_profiles(cds_profile_control, cds_profile_experiment, segments, mode='center'),
             'control_mean_coverage': np.mean(cds_profile_control), 'experiment_mean_coverage': np.mean(cds_profile_experiment),
             'control_total_coverage': np.sum(cds_profile_control), 'experiment_total_coverage': np.sum(cds_profile_experiment),
             'control_polarity_score': polarity_score(cds_profile_control), 'experiment_polarity_score': polarity_score(cds_profile_experiment),
             'num_segments': len(segments),
+            'multipoint_slope': slope_by_profiles(cds_profile_control, cds_profile_experiment, segments, mode='every_point'),
+            'profile_difference': profile_difference(cds_profile_control, cds_profile_experiment, segments),
         }
         return cls(**info)
 
@@ -160,7 +169,7 @@ class TranscriptComparator:
         return CoverageComparisonStats.make_from_profiles(transcript_info, cds_profile_control, cds_profile_experiment, segments)
 
 
-def slope_by_profiles(control_profile, experiment_profile, segments):
+def slope_by_profiles(control_profile, experiment_profile, segments, mode='center'):
     total_coverage_control = sum(control_profile)
     total_coverage_experiment = sum(experiment_profile)
     assert len(control_profile) == len(experiment_profile)
@@ -177,16 +186,44 @@ def slope_by_profiles(control_profile, experiment_profile, segments):
         normalized_mean_experiment = (mean_experiment + 1) / (total_coverage_experiment + num_segments)
         detrended_profile = normalized_mean_experiment / normalized_mean_control
         log_detrended_profile = log(detrended_profile)
-        coord = (start + stop - 1) / 2
-        rel_coord = coord / profile_len
-        xs.append(rel_coord)
-        ys.append(log_detrended_profile)
-        sample_weights.append(1)
+        if mode == 'center':
+            coord = (start + stop - 1) / 2
+            rel_coord = coord / profile_len
+            xs.append(rel_coord)
+            ys.append(log_detrended_profile)
+            sample_weights.append(1)
+        elif mode == 'weighted_center':
+            coord = (start + stop - 1) / 2
+            rel_coord = coord / profile_len
+            weight = stop - start
+            xs.append(rel_coord)
+            ys.append(log_detrended_profile)
+            sample_weights.append(weight)
+        elif mode == 'every_point':
+            for pos in range(start, stop):
+                rel_coord = pos / profile_len
+                xs.append(rel_coord)
+                ys.append(log_detrended_profile)
+                sample_weights.append(1)
+        else:
+            raise NotImplementedError()
         # sample_weights.append(stop - start)
     xs = np.array(xs)
     model.fit(xs.reshape(-1, 1), ys, sample_weight=sample_weights)
     slope = model.coef_[0]
     return slope
+
+
+def profile_difference(control_profile, experiment_profile, segments):
+    assert len(control_profile) == len(experiment_profile)
+    normed_control_profile = control_profile / np.sum(control_profile)
+    normed_experiment_profile = experiment_profile / np.sum(experiment_profile)
+    difference = 0
+    for (start, stop, *_) in segments:
+        mean_control = np.mean(normed_control_profile[start:stop])
+        mean_experiment = np.mean(normed_experiment_profile[start:stop])
+        difference += (stop - start) * abs(mean_control - mean_experiment)
+    return difference / len(control_profile)
 
 # by default takes max by geometric mean of cds-mean between experiments
 def choose_best_transcript(slope_data, key=lambda info: info.geom_mean_coverage()):
