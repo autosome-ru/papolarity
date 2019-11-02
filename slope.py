@@ -8,7 +8,7 @@ import pasio_wrapper
 from coverage_profile import transcript_coverages_in_file
 from pooling import starjoin_sorted, pooling
 import numpy as np
-from math import log, abs
+from math import log
 
 coverage_stats_fields = [
     'transcript_info', 'slope',
