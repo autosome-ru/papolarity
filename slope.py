@@ -216,8 +216,10 @@ def slope_by_profiles(control_profile, experiment_profile, segments, mode='cente
 
 def profile_difference(control_profile, experiment_profile, segments):
     assert len(control_profile) == len(experiment_profile)
-    normed_control_profile = control_profile / np.sum(control_profile)
-    normed_experiment_profile = experiment_profile / np.sum(experiment_profile)
+    control_profile_sum = np.sum(control_profile)
+    experiment_profile_sum = np.sum(experiment_profile)
+    normed_control_profile = control_profile / control_profile_sum  if control_profile_sum != 0  else control_profile
+    normed_experiment_profile = experiment_profile / experiment_profile_sum  if experiment_profile_sum != 0  else experiment_profile
     difference = 0
     for (start, stop, *_) in segments:
         mean_control = np.mean(normed_control_profile[start:stop])
