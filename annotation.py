@@ -2,6 +2,8 @@ from collections import defaultdict
 from collections import namedtuple
 from gtf_parser import *
 from coding_transcript_info import CodingTranscriptInfo
+import itertools
+import pybedtools
 
 class Annotation:
     def __init__(self):
@@ -17,7 +19,7 @@ class Annotation:
 
         if relevant_attributes:
             # that's the minimum list of attributes for a library to properly work
-            necessary_attributes = {'gene_id', 'transcript_id', 'gene_type', 'transcript_type'}
+            necessary_attributes = {'gene_id', 'transcript_id', 'gene_type', 'transcript_type', 'exon_number'}
             relevant_attributes = relevant_attributes.union(necessary_attributes)
             attributes_filter = lambda attributes: {k: v  for (k,v) in attributes.items()  if k in relevant_attributes}
         else:
@@ -83,6 +85,44 @@ class Annotation:
 
         return CodingTranscriptInfo(gene_id, transcript_id, transcript_length, cds_start, cds_stop)
 
+    def ordered_segments_by_type(self, transcript_id, feature_type):
+        by_exon_number = lambda segment: segment.attributes['exon_number']
+        if feature_type == 'exons':
+            return sorted(self.transcript_exons(transcript_id), key=by_exon_number)
+        elif feature_type == 'cds':
+            return sorted(self.transcript_cds(transcript_id), key=by_exon_number)
+        elif feature_type == 'full':
+            # full, unspliced transcript
+            return [self.transcript_by_id(transcript_id)]
+
+
+    def segments_as_bedtool_intervals(self, segments, name='.'):
+        yield from (pybedtools.Interval(s.contig, s.start, s.stop, strand=s.strand, name=name) for s in segments)
+
+    # annotation.transcript_sequence('ENSMUST00000115529.7', './genomes/mm10.fa', feature_type='cds')
+    def transcript_sequence(self, transcript_id, assembly_fasta_fn, feature_type='exons'):
+        iterator = self.transcript_sequences([transcript_id], assembly_fasta_fn, feature_type)
+        transcript_id, sequence = next(iterator)
+        return sequence
+
+    # feature type is one of full/exons/cds
+    def transcript_sequences(self, transcript_ids, assembly_fasta_fn, feature_type='exons'):
+        intervals = itertools.chain.from_iterable(
+            self.segments_as_bedtool_intervals(
+                self.ordered_segments_by_type(transcript_id, feature_type),
+                name = transcript_id
+            ) for transcript_id in transcript_ids
+        )
+        bed = pybedtools.BedTool(intervals)
+        seq_result = bed.sequence(fi = assembly_fasta_fn, name=True)
+        with open(seq_result.seqfn) as fasta_file:
+            sequences = iterate_as_fasta(fasta_file)
+            sequence_groups = itertools.groupby(sequences, key=lambda hdr_seq_pair: hdr_seq_pair[0])
+            # we have separate sequences for each feature (such as exon) of transcript, so we should join them
+            for transcript_id, hdr_seq_pairs in sequence_groups:
+                sequence = ''.join(hdr_seq_pair[1] for hdr_seq_pair in hdr_seq_pairs)
+                yield (transcript_id, sequence)
+
 
 # take only elements related to coding transcripts of coding genes
 def filter_coding(iter):
@@ -100,3 +140,19 @@ def take_the_only(arr):
 def load_transcript_cds_info(cds_annotation_filename):
     transcript_infos = CodingTranscriptInfo.each_from_file(cds_annotation_filename)
     return {tr_info.transcript_id: tr_info  for tr_info in transcript_infos}
+
+# takes an iterator of lines in FASTA file and yield pairs (header, sequence)
+# properly handles multiline FASTA
+def iterate_as_fasta(fasta_lines):
+    header = None
+    for line in fasta_lines:
+        line = line.rstrip('\n')
+        if line.startswith('>'):
+            if header != None:
+                yield (header, ''.join(sequences))
+            header = line[1:].lstrip()
+            sequences = []
+        else:
+            sequences.append(line.strip())
+    if header != None:
+        yield (header, ''.join(sequences))
