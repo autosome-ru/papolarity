@@ -16,6 +16,9 @@ class Annotation:
         annotation = cls()
 
         if relevant_attributes:
+            # that's the minimum list of attributes for a library to properly work
+            necessary_attributes = {'gene_id', 'transcript_id', 'gene_type', 'transcript_type'}
+            relevant_attributes = relevant_attributes.union(necessary_attributes)
             attributes_filter = lambda attributes: {k: v  for (k,v) in attributes.items()  if k in relevant_attributes}
         else:
             attributes_filter = lambda x: x
