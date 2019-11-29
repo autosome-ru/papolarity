@@ -4,7 +4,12 @@ from pybedtools import BedTool
 from annotation import load_transcript_cds_info
 from slope import CoverageComparisonStats, TranscriptComparator
 
-splitter = pasio_wrapper.pasio_splitter()
+import pasio
+import logging
+
+logger = logging.getLogger('pasio')
+logger.setLevel(logging.WARNING)
+splitter = pasio.configure_splitter(alpha=1, beta=1, algorithm='round', window_size=2500, window_shift=1250, num_rounds=None, no_split_constant=True)
 
 cds_annotation_fn = sys.argv[1] # 'gencode.vM22.cds_features.tsv'
 cds_info_by_transcript = load_transcript_cds_info(cds_annotation_fn)

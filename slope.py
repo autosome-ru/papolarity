@@ -4,11 +4,16 @@ import sys
 from collections import namedtuple
 from sklearn.linear_model import LinearRegression
 from polarity_score import polarity_score
-import pasio_wrapper
+import pasio
 from coverage_profile import transcript_coverages_in_file
 from pooling import starjoin_sorted, pooling
 import numpy as np
 from math import log
+
+import logging
+logger = logging.getLogger('pasio')
+logger.setLevel(logging.WARNING)
+
 
 coverage_stats_fields = [
     'transcript_info', 'slope',
@@ -163,7 +168,8 @@ class TranscriptComparator:
         pooled_cds_coverage = pooling([cds_profile_control, cds_profile_experiment])
         if len(pooled_cds_coverage) == 0:
             return None
-        segments = list( pasio_wrapper.stable_segments(pooled_cds_coverage, self.splitter) ) # [(start, stop, lambda), ...]
+
+        segments = list(pasio.segments_with_scores(pooled_cds_coverage, self.splitter)) # [(start, stop, lambda), ...]
         # stable_cds_profile_control = stabilize_profile(cds_profile_control, segments)
         # stable_cds_profile_experiment = stabilize_profile(cds_profile_experiment, segments)
         return CoverageComparisonStats.make_from_profiles(transcript_info, cds_profile_control, cds_profile_experiment, segments)
@@ -179,7 +185,9 @@ def slope_by_profiles(control_profile, experiment_profile, segments, mode='cente
     ys = []
     sample_weights = []
     num_segments = len(segments)
-    for (start, stop, *_) in segments:
+    for segment in segments:
+        start = segment.start
+        stop = segment.stop
         mean_control = np.mean(control_profile[start:stop])
         mean_experiment = np.mean(experiment_profile[start:stop])
         normalized_mean_control = (mean_control + 1) / (total_coverage_control + num_segments)
@@ -221,7 +229,9 @@ def profile_difference(control_profile, experiment_profile, segments):
     normed_control_profile = control_profile / control_profile_sum  if control_profile_sum != 0  else control_profile
     normed_experiment_profile = experiment_profile / experiment_profile_sum  if experiment_profile_sum != 0  else experiment_profile
     difference = 0
-    for (start, stop, *_) in segments:
+    for segment in segments:
+        start = segment.start
+        stop = segment.stop
         mean_control = np.mean(normed_control_profile[start:stop])
         mean_experiment = np.mean(normed_experiment_profile[start:stop])
         difference += (stop - start) * abs(mean_control - mean_experiment)
@@ -237,6 +247,8 @@ def choose_best_transcript(slope_data, key=lambda info: info.geom_mean_coverage(
 
 def stabilize_profile(profile, segments):
     stable_profile = np.zeros_like(profile)
-    for (start, stop, *_) in segments:
+    for segment in segments:
+        start = segment.start
+        stop = segment.stop
         stable_profile[start:stop] = np.mean(profile[start:stop])
     return stable_profile
