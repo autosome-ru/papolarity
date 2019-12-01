@@ -88,7 +88,7 @@ def parse_gtf_attributes(attribute_string):
     # Some records has several attributes with the same key (like `tag`), we treat values for such keys as lists
     multivalue_keys = {'tag', 'ont'}
     for attribute in attribute_string.strip().rstrip(";").split(";"):
-        key, value = attribute.strip().split(" ")
+        key, value = attribute.strip().split(" ", maxsplit=1)
 
         if value[0] == '"':
             val = value[1:-1]
