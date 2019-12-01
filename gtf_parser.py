@@ -44,7 +44,7 @@ def encode_gtf_attributes(attributes):
     attr_strings = [f'{k} {json.dumps(v)};' for k,v in attributes.items()]
     return ' '.join(attr_strings)
 
-def parse_gtf(filename, attributes_filter=lambda x: x):
+def parse_gtf(filename, relevant_attributes=None):
     """
     A minimalistic GTF format parser.
     Yields objects that contain info about a single GTF feature.
@@ -64,6 +64,13 @@ def parse_gtf(filename, attributes_filter=lambda x: x):
             assert parts[3] != '.'  # start
             assert parts[4] != '.'  # stop
             assert parts[6] in {'+', '-'}
+
+            attributes = parse_gtf_attributes(parts[8])
+            if relevant_attributes is not None:
+                attributes_filtered = {k: v  for (k,v) in attributes.items()  if k in relevant_attributes}
+            else:
+                attributes_filtered = attributes
+
             # Normalize data
             normalized_info = {
                 "contig": parts[0],
@@ -74,10 +81,8 @@ def parse_gtf(filename, attributes_filter=lambda x: x):
                 "score": None if parts[5] == "." else float(parts[5]),
                 "strand": parts[6],
                 "phase": None if parts[7] == "." else parts[7],
-                "attributes": attributes_filter(parse_gtf_attributes(parts[8]))
+                "attributes": attributes_filtered,
             }
-            # Alternatively, you can emit the dictionary here, if you need mutability:
-            #    yield normalizedInfo
             yield GTFRecord(**normalized_info)
 
 def parse_gtf_attributes(attribute_string):

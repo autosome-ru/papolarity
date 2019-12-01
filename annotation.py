@@ -17,15 +17,13 @@ class Annotation:
     def load(cls, filename, relevant_attributes=None, coding_only=False):
         annotation = cls()
 
-        if relevant_attributes:
+        if relevant_attributes is not None:
             # that's the minimum list of attributes for a library to properly work
             necessary_attributes = {'gene_id', 'transcript_id', 'gene_type', 'transcript_type', 'exon_number'}
             relevant_attributes = relevant_attributes.union(necessary_attributes)
-            attributes_filter = lambda attributes: {k: v  for (k,v) in attributes.items()  if k in relevant_attributes}
-        else:
-            attributes_filter = lambda x: x
 
-        records = parse_gtf(filename, attributes_filter=attributes_filter)
+        records = parse_gtf(filename, relevant_attributes=relevant_attributes)
+
         if coding_only:
             records = filter_coding(records)
 
