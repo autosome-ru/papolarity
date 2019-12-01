@@ -4,7 +4,10 @@ import sys
 
 gtf_annotation_fn = sys.argv[1] # 'gencode.vM22.basic.annotation.gtf.gz'
 
-annotation = Annotation.load(gtf_annotation_fn, relevant_attributes=set(), coding_only=True)
+annotation = Annotation.load(gtf_annotation_fn,
+                            relevant_attributes=set(),
+                            attr_mapping={'gene_biotype': 'gene_type', 'transcript_biotype': 'transcript_type'},
+                            coding_only=True)
 
 print(CodingTranscriptInfo.header())
 for transcript_id in annotation.transcript_by_id:

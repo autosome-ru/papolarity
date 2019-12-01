@@ -14,15 +14,20 @@ class Annotation:
         self.parts_by_transcript = defaultdict(list)
 
     @classmethod
-    def load(cls, filename, relevant_attributes=None, coding_only=False):
+    def load(cls, filename, relevant_attributes=None, coding_only=False, attr_mapping=None):
         annotation = cls()
 
         if relevant_attributes is not None:
             # that's the minimum list of attributes for a library to properly work
             necessary_attributes = {'gene_id', 'transcript_id', 'gene_type', 'transcript_type', 'exon_number'}
             relevant_attributes = relevant_attributes.union(necessary_attributes)
+            # We should preserve attributes in order to rename them later
+            if attr_mapping:
+                relevant_attributes = relevant_attributes.union(attr_mapping.keys())
 
         records = parse_gtf(filename, relevant_attributes=relevant_attributes)
+        if attr_mapping:
+            records = map(lambda rec: rec.attributes_renamed(attr_mapping), records)
 
         if coding_only:
             records = filter_coding(records)
