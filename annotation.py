@@ -175,7 +175,3 @@ class Annotation:
         if (record.type != 'gene') and (record.attributes['transcript_type'] != 'protein_coding'):
             return False
         return True
-
-def load_transcript_cds_info(cds_annotation_filename):
-    transcript_infos = CodingTranscriptInfo.each_from_file(cds_annotation_filename)
-    return {tr_info.transcript_id: tr_info  for tr_info in transcript_infos}

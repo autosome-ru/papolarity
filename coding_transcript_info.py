@@ -22,6 +22,11 @@ class CodingTranscriptInfo(namedtuple("CodingTranscriptInfo", ['gene_id', 'trans
             for line in f:
                 yield CodingTranscriptInfo.from_string(line)
 
+    @classmethod
+    def load_transcript_cds_info(cls, cds_annotation_filename):
+        transcript_infos = cls.each_from_file(cds_annotation_filename)
+        return {tr_info.transcript_id: tr_info  for tr_info in transcript_infos}
+
     @property
     def cds_length(self):
         return self.cds_stop - self.cds_start
