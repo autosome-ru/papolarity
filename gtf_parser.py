@@ -16,13 +16,6 @@ class GTFRecord(namedtuple("GTFRecord", gff_info_fields)):
         row = [elem if elem else '.'  for elem in row]
         return '\t'.join(map(str, row))
 
-    def is_coding(self):
-        if self.attributes['gene_type'] != 'protein_coding':
-            return False
-        if (self.type != 'gene') and (self.attributes['transcript_type'] != 'protein_coding'):
-            return False
-        return True
-
     def contain_position(self, pos):
         return self.start <= pos < self.stop
 

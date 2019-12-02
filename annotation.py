@@ -33,7 +33,7 @@ class Annotation:
             records = map(lambda rec: rec.attributes_filtered(relevant_attributes), records)
 
         if coding_only:
-            records = filter_coding(records)
+            records = filter(cls.is_coding, records)
 
         for rec in records:
             annotation.push_record(rec)
@@ -167,12 +167,13 @@ class Annotation:
                 sequence = ''.join(hdr_seq_pair[1] for hdr_seq_pair in hdr_seq_pairs)
                 yield (transcript_id, sequence)
 
-
-# take only elements related to coding transcripts of coding genes
-def filter_coding(iter):
-    for rec in iter:
-        if rec.is_coding():
-            yield rec
+    @classmethod
+    def is_coding(cls, record):
+        if record.attributes['gene_type'] != 'protein_coding':
+            return False
+        if (record.type != 'gene') and (record.attributes['transcript_type'] != 'protein_coding'):
+            return False
+        return True
 
 def take_the_only(arr):
     if len(arr) > 1:
