@@ -1,6 +1,8 @@
 from collections import defaultdict
 from collections import namedtuple
 from gtf_parser import *
+from utils import take_the_only
+from fasta_reader import fasta_from_file
 from coding_transcript_info import CodingTranscriptInfo
 import itertools
 import pybedtools
@@ -157,15 +159,14 @@ class Annotation:
         )
         bed = pybedtools.BedTool(intervals)
         seq_result = bed.sequence(fi = assembly_fasta_fn, name=True, s=True)  # s - strandedness
-        with open(seq_result.seqfn) as fasta_file:
-            sequences = iterate_as_fasta(fasta_file)
-            sequence_groups = itertools.groupby(sequences, key=lambda hdr_seq_pair: hdr_seq_pair[0])
-            # we have separate sequences for each feature (such as exon) of transcript, so we should join them
-            for transcript_id, hdr_seq_pairs in sequence_groups:
-                if transcript_id[-3:] in ['(+)', '(-)']:
-                    transcript_id = transcript_id[0:-3]
-                sequence = ''.join(hdr_seq_pair[1] for hdr_seq_pair in hdr_seq_pairs)
-                yield (transcript_id, sequence)
+        sequences = fasta_from_file(seq_result.seqfn)
+        sequence_groups = itertools.groupby(sequences, key=lambda hdr_seq_pair: hdr_seq_pair[0])
+        # we have separate sequences for each feature (such as exon) of transcript, so we should join them
+        for transcript_id, hdr_seq_pairs in sequence_groups:
+            if transcript_id[-3:] in ['(+)', '(-)']:
+                transcript_id = transcript_id[0:-3]
+            sequence = ''.join(hdr_seq_pair[1] for hdr_seq_pair in hdr_seq_pairs)
+            yield (transcript_id, sequence)
 
     @classmethod
     def is_coding(cls, record):
@@ -175,29 +176,6 @@ class Annotation:
             return False
         return True
 
-def take_the_only(arr):
-    if len(arr) > 1:
-        raise Exception('Several elements when the only one is expected')
-    if len(arr) == 0:
-        raise Exception('No elements when one is expected')
-    return arr[0]
-
 def load_transcript_cds_info(cds_annotation_filename):
     transcript_infos = CodingTranscriptInfo.each_from_file(cds_annotation_filename)
     return {tr_info.transcript_id: tr_info  for tr_info in transcript_infos}
-
-# takes an iterator of lines in FASTA file and yield pairs (header, sequence)
-# properly handles multiline FASTA
-def iterate_as_fasta(fasta_lines):
-    header = None
-    for line in fasta_lines:
-        line = line.rstrip('\n')
-        if line.startswith('>'):
-            if header != None:
-                yield (header, ''.join(sequences))
-            header = line[1:].lstrip()
-            sequences = []
-        else:
-            sequences.append(line.strip())
-    if header != None:
-        yield (header, ''.join(sequences))
