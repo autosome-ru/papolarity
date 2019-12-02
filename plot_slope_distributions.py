@@ -1,4 +1,5 @@
-from slope import CoverageComparisonStats, choose_best_transcript
+from dto.coverage_comparison_stats import CoverageComparisonStats
+from slope import choose_best_transcript
 import sys
 import os
 import seaborn as sns

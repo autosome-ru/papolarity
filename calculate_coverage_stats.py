@@ -2,7 +2,8 @@ import sys
 import pasio_wrapper
 from pybedtools import BedTool
 from coding_transcript_info import CodingTranscriptInfo
-from slope import CoverageComparisonStats, TranscriptComparator
+from dto.coverage_comparison_stats import CoverageComparisonStats
+from slope import TranscriptComparator
 
 import pasio
 import logging
