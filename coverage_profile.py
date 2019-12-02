@@ -1,10 +1,13 @@
-import pybedtools
+from pybedtools import BedTool
 import itertools
 import sys
 import numpy as np
 import coreutils_sort
 
-def transcript_coverages_in_file(alignment, sort_transcripts=False):
+def transcript_coverages_from_file(alignment_fn, sort_transcripts=False):
+    alignment = BedTool(alignment_fn)
+    yield from transcript_coverages_from_alignment(alignment, sort_transcripts=sort_transcripts)
+def transcript_coverages_from_alignment(alignment, sort_transcripts=False):
     if sort_transcripts:
         bedgraph = alignment.genome_coverage(bga=True).coreutils_sort(key=['1,1'], stream=True)
     else:
