@@ -22,24 +22,28 @@ polarities_experiment = [info.experiment_polarity_score for info in slope_data]
 polarity_deltas = [info.experiment_polarity_score - info.control_polarity_score for info in slope_data]
 
 plt.figure()
+plt.title(basename)
 sns.kdeplot(slopes)
 # plt.xlim(-0.02,0.02)
 plt.axvline(x=0, color='green')
 plt.savefig(f'{dirname}/slope_{basename}.png')
 
 plt.figure()
+plt.title(basename)
 sns.kdeplot(slopes_multipoint)
 # plt.xlim(-0.02,0.02)
 plt.axvline(x=0, color='green')
 plt.savefig(f'{dirname}/slope_multipoint_{basename}.png')
 
 plt.figure()
+plt.title(basename)
 sns.kdeplot(profile_difference)
 # plt.xlim(-0.02,0.02)
 plt.axvline(x=0, color='green')
 plt.savefig(f'{dirname}/profile_diffs_{basename}.png')
 
 plt.figure()
+plt.title(basename)
 sns.kdeplot(polarities_control, color='b', label='control')
 sns.kdeplot(polarities_experiment, color='r', label='experiment')
 # plt.xlim(-0.02,0.02)
@@ -47,6 +51,7 @@ plt.axvline(x=0, color='green')
 plt.savefig(f'{dirname}/polarities_{basename}.png')
 
 plt.figure()
+plt.title(basename)
 sns.kdeplot(polarity_deltas)
 # plt.xlim(-0.02,0.02)
 plt.axvline(x=0, color='green')
