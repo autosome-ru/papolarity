@@ -55,6 +55,30 @@ class Annotation:
         parts = self.parts_by_transcript[transcript_id]
         return [part  for part in parts  if part.type == 'CDS']
 
+    def transcript_start_codons(self, transcript_id):
+        '''
+        We return a list of codons because some transcripts
+        don't have an annotated start/stop codon or have
+        several segments due to splicing
+        '''
+        parts = self.parts_by_transcript[transcript_id]
+        start_codons = [part  for part in parts  if part.type == 'start_codon']
+        return start_codons
+
+    def transcript_stop_codons(self, transcript_id):
+        '''
+        We return a list of codons because some transcripts
+        don't have an annotated start/stop codon or have
+        several segments due to splicing
+        '''
+        parts = self.parts_by_transcript[transcript_id]
+        stop_codons = [part  for part in parts  if part.type == 'stop_codon']
+        return stop_codons
+
+    def transcript_utrs(self, transcript_id):
+        parts = self.parts_by_transcript[transcript_id]
+        return [part  for part in parts  if part.type == 'UTR']
+
     def transcript_strand(self, transcript_id):
         return self.segments_strand(self.parts_by_transcript[transcript_id])
 
