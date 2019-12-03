@@ -23,7 +23,7 @@ class Annotation:
 
         if relevant_attributes is not None:
             # that's the minimum list of attributes for a library to properly work
-            necessary_attributes = {'gene_id', 'transcript_id', 'gene_type', 'transcript_type', 'exon_number'}
+            necessary_attributes = {'gene_id', 'transcript_id', 'gene_type', 'transcript_type'}
             relevant_attributes = relevant_attributes.union(necessary_attributes)
             records = map(lambda rec: rec.attributes_filtered(relevant_attributes), records)
 
@@ -87,11 +87,12 @@ class Annotation:
         return CodingTranscriptInfo(gene_id, transcript_id, transcript_length, cds_start, cds_stop)
 
     def ordered_segments_by_type(self, transcript_id, feature_type):
-        by_exon_number = lambda segment: segment.attributes['exon_number']
+        by_start_coordinate = lambda segment: segment.start
+        reverse_order = (self.transcript_strand(transcript_id) == '-')
         if feature_type == 'exons':
-            return sorted(self.transcript_exons(transcript_id), key=by_exon_number)
+            return sorted(self.transcript_exons(transcript_id), key=by_start_coordinate, reverse=reverse_order)
         elif feature_type == 'cds':
-            return sorted(self.transcript_cds(transcript_id), key=by_exon_number)
+            return sorted(self.transcript_cds(transcript_id), key=by_start_coordinate, reverse=reverse_order)
         elif feature_type == 'full':
             # full, unspliced transcript
             return [self.transcript_by_id(transcript_id)]
