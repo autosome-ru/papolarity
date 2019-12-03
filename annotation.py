@@ -126,6 +126,8 @@ class Annotation:
             return self.segments_ordered_5_to_3(self.transcript_exons(transcript_id))
         elif feature_type == 'cds':
             return self.segments_ordered_5_to_3(self.transcript_cds(transcript_id))
+        elif feature_type == 'cds_with_stop':
+            return self.segments_ordered_5_to_3(self.transcript_cds(transcript_id) + self.transcript_stop_codons(transcript_id))
         elif feature_type == 'full':
             # full, unspliced transcript
             return [self.transcript_by_id(transcript_id)]
