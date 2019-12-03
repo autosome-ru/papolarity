@@ -115,12 +115,14 @@ class Annotation:
             ) for transcript_id in transcript_ids
         )
         bed = pybedtools.BedTool(intervals)
-        seq_result = bed.sequence(fi = assembly_fasta_fn, name=True)
+        seq_result = bed.sequence(fi = assembly_fasta_fn, name=True, s=True)  # s - strandedness
         with open(seq_result.seqfn) as fasta_file:
             sequences = iterate_as_fasta(fasta_file)
             sequence_groups = itertools.groupby(sequences, key=lambda hdr_seq_pair: hdr_seq_pair[0])
             # we have separate sequences for each feature (such as exon) of transcript, so we should join them
             for transcript_id, hdr_seq_pairs in sequence_groups:
+                if transcript_id[-3:] in ['(+)', '(-)']:
+                    transcript_id = transcript_id[0:-3]
                 sequence = ''.join(hdr_seq_pair[1] for hdr_seq_pair in hdr_seq_pairs)
                 yield (transcript_id, sequence)
 
