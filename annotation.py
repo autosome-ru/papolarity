@@ -56,10 +56,21 @@ class Annotation:
         return [part  for part in parts  if part.type == 'CDS']
 
     def transcript_strand(self, transcript_id):
-        segment_strands = { segment.strand  for segment in  self.parts_by_transcript[transcript_id] }
-        if len(segment_strands) != 1:
-            raise Exception('Different strands')
-        return segment_strands.pop()
+        return self.segments_strand(self.parts_by_transcript[transcript_id])
+
+    @classmethod
+    def segments_strand(cls, segments):
+        strands = { segment.strand  for segment in  segments }
+        if len(strands) != 1:
+            raise ValueError('Different strands')
+        return strands.pop()
+
+    @classmethod
+    def segments_ordered_5_to_3(cls, segments):
+        strand = cls.segments_strand(segments)
+        reverse_order = (strand == '-')
+        by_start_coordinate = lambda segment: segment.start
+        return sorted(segments, key=by_start_coordinate, reverse=reverse_order)
 
     def coding_transcript_info(self, transcript_id):
         """Return coding transcript info. This method fails when called for non-coding transcript"""
@@ -87,12 +98,10 @@ class Annotation:
         return CodingTranscriptInfo(gene_id, transcript_id, transcript_length, cds_start, cds_stop)
 
     def ordered_segments_by_type(self, transcript_id, feature_type):
-        by_start_coordinate = lambda segment: segment.start
-        reverse_order = (self.transcript_strand(transcript_id) == '-')
         if feature_type == 'exons':
-            return sorted(self.transcript_exons(transcript_id), key=by_start_coordinate, reverse=reverse_order)
+            return self.segments_ordered_5_to_3(self.transcript_exons(transcript_id))
         elif feature_type == 'cds':
-            return sorted(self.transcript_cds(transcript_id), key=by_start_coordinate, reverse=reverse_order)
+            return self.segments_ordered_5_to_3(self.transcript_cds(transcript_id))
         elif feature_type == 'full':
             # full, unspliced transcript
             return [self.transcript_by_id(transcript_id)]
