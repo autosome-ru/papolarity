@@ -68,7 +68,7 @@ def encode_gtf_attributes(attributes):
     attr_strings = [f'{k} {json.dumps(v)};' for k,v in attributes.items()]
     return ' '.join(attr_strings)
 
-def parse_gtf(filename):
+def parse_gtf(filename, multivalue_keys=None):
     """
     A minimalistic GTF format parser.
     Yields objects that contain info about a single GTF feature.
@@ -99,17 +99,15 @@ def parse_gtf(filename):
                 "score": None if parts[5] == "." else float(parts[5]),
                 "strand": parts[6],
                 "phase": None if parts[7] == "." else parts[7],
-                "attributes": parse_gtf_attributes(parts[8]),
+                "attributes": parse_gtf_attributes(parts[8], multivalue_keys=multivalue_keys),
             }
             yield GTFRecord(**normalized_info)
 
-def parse_gtf_attributes(attribute_string):
+def parse_gtf_attributes(attribute_string, multivalue_keys=None):
     """Parse the GTF attribute column and return a dict"""
     if attribute_string == ".":
         return {}
     ret = {}
-    # Some records has several attributes with the same key (like `tag`), we treat values for such keys as lists
-    multivalue_keys = {'tag', 'ont', 'ccdsid'}
     for attribute in attribute_string.strip().rstrip(";").split(";"):
         key, value = attribute.strip().split(" ", maxsplit=1)
 
@@ -118,11 +116,15 @@ def parse_gtf_attributes(attribute_string):
         else:
             val = int(value)
 
+        # Some records has several attributes with the same key
+        # (e.g. `tag tag_1; tag tag_2;`)
+        # We treat values for such keys as lists
         if key not in multivalue_keys:
             if key not in ret:
                 ret[key] = val
             else:
-                raise Exception(f'Key `{key}` already in attributes')
+                raise Exception(f'Key `{key}` already in attributes.\n'
+                                 'Probably you should add this attribute to a set of `multivalue_keys`')
         else:
             if key not in ret:
                 ret[key] = []

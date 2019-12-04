@@ -14,10 +14,15 @@ class Annotation:
         self.parts_by_transcript = defaultdict(list)
 
     @classmethod
-    def load(cls, filename, relevant_attributes=None, coding_only=False, attr_mapping=None):
+    def load(cls, filename, relevant_attributes=None, coding_only=False, attr_mapping=None, multivalue_keys=None):
         annotation = cls()
 
-        records = parse_gtf(filename)
+        if multivalue_keys is None:
+            # multivalued keys for Gencode data model:
+            # https://www.gencodegenes.org/pages/data_format.html
+            multivalue_keys = {'tag', 'ont', 'ccdsid'}
+
+        records = parse_gtf(filename, multivalue_keys=multivalue_keys)
         if attr_mapping:
             records = map(lambda rec: rec.attributes_renamed(attr_mapping), records)
 
