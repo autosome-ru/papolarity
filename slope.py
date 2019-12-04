@@ -6,7 +6,8 @@ from sklearn.linear_model import LinearRegression
 from polarity_score import polarity_score
 import pasio
 from coverage_profile import transcript_coverages_from_alignment
-from pooling import starjoin_sorted, pooling
+from utils import starjoin_sorted
+from utils import pool_profiles
 import numpy as np
 from math import log
 from dto.coverage_comparison_stats import CoverageComparisonStats
@@ -43,7 +44,7 @@ class TranscriptComparator:
         # start and stop codon can have piles of reads, so we usually want to drop them
         cds_profile_control = cds_profile_control[self.drop_start_flank : -self.drop_stop_flank]
         cds_profile_experiment = cds_profile_experiment[self.drop_start_flank : -self.drop_stop_flank]
-        pooled_cds_coverage = pooling([cds_profile_control, cds_profile_experiment])
+        pooled_cds_coverage = pool_profiles([cds_profile_control, cds_profile_experiment])
         if len(pooled_cds_coverage) == 0:
             return None
 
