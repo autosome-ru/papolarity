@@ -13,12 +13,12 @@ def transcript_coverages_from_alignment(alignment, sort_transcripts=False, dtype
     bedgraph = make_coverage(alignment, sort_transcripts=sort_transcripts)
     yield from transcript_coverages_from_bedgraph(bedgraph, dtype=dtype)
 
-def make_coverage(alignment, sort_transcripts=False):
+def make_coverage(alignment, sort_transcripts=False, stream=True):
     if sort_transcripts:
         # sort by chromosome (transcript_id in case of transcriptomic alignments)
-        bedgraph = alignment.genome_coverage(bga=True).coreutils_sort(key=['1,1'], stream=True)
+        bedgraph = alignment.genome_coverage(bga=True).coreutils_sort(key=['1,1', '2,2n'], stream=stream)
     else:
-        bedgraph = alignment.genome_coverage(bga=True, stream=True)
+        bedgraph = alignment.genome_coverage(bga=True, stream=stream)
     return bedgraph
 
 def transcript_coverages_from_bedgraph(bedgraph, dtype=float):
