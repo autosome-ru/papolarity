@@ -25,8 +25,8 @@ class TranscriptComparator:
         self.drop_stop_flank = drop_stop_flank
 
     def compare_multiple_alignments(self, alignment_control, alignment_experiment):
-        coverages_control_iter = transcript_coverages_from_alignment(alignment_control, sort_transcripts=True)
-        coverages_experiment_iter = transcript_coverages_from_alignment(alignment_experiment, sort_transcripts=True)
+        coverages_control_iter = transcript_coverages_from_alignment(alignment_control, sort_transcripts=True, dtype=int)
+        coverages_experiment_iter = transcript_coverages_from_alignment(alignment_experiment, sort_transcripts=True, dtype=int)
 
         for (transcript_id, (_, coverage_control), (_, coverage_experiment)) in starjoin_sorted(coverages_control_iter, coverages_experiment_iter, key=lambda txid, coverage: txid):
             if transcript_id not in self.cds_info_by_transcript:
