@@ -4,6 +4,7 @@ import itertools
 import sys
 import numpy as np
 import coreutils_sort
+from dto.transcript_coverage import TranscriptCoverage
 
 def transcript_coverages_from_file(alignment_fn, sort_transcripts=False, dtype=float):
     alignment = BedTool(alignment_fn)
@@ -26,7 +27,7 @@ def transcript_coverages_from_bedgraph(bedgraph, dtype=float):
         bedgraph_intervals = list(bedgraph_intervals_iter)
         transcript_length = max(interval.stop for interval in bedgraph_intervals)
         profile = profile_by_bedgraph(bedgraph_intervals, transcript_length, dtype=dtype)
-        yield (transcript_id, profile)
+        yield TranscriptCoverage(transcript_id, profile)
 
 def profile_by_bedgraph(bedgraph_intervals_iter, transcript_length, dtype=float):
     profile = np.zeros(transcript_length, dtype=dtype)

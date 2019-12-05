@@ -6,7 +6,7 @@ from sklearn.linear_model import LinearRegression
 from polarity_score import polarity_score
 import pasio
 from coverage_profile import transcript_coverages_from_alignment
-from utils import starjoin_sorted
+from utils import common_subsequence
 from utils import pool_profiles
 import numpy as np
 from math import log
@@ -29,11 +29,12 @@ class TranscriptComparator:
         coverages_control_iter = transcript_coverages_from_alignment(alignment_control, sort_transcripts=True, dtype=int)
         coverages_experiment_iter = transcript_coverages_from_alignment(alignment_experiment, sort_transcripts=True, dtype=int)
 
-        for (transcript_id, (_, coverage_control), (_, coverage_experiment)) in starjoin_sorted(coverages_control_iter, coverages_experiment_iter, key=lambda txid, coverage: txid):
+        common_transcripts = common_subsequence([coverages_control_iter, coverages_experiment_iter], key=TranscriptCoverage.transcript_id)
+        for (transcript_id, (coverage_control, coverage_experiment)) in common_transcripts:
             if transcript_id not in self.cds_info_by_transcript:
                 continue
             transcript_info = self.cds_info_by_transcript[transcript_id]
-            info = self.compare_profiles(transcript_info, coverage_control, coverage_experiment)
+            info = self.compare_profiles(transcript_info, coverage_control.coverage, coverage_experiment.coverage)
             if info:
                 yield info
 
