@@ -3,16 +3,15 @@
 from collections import namedtuple
 import gzip
 import json
-# import urllib.request, urllib.parse, urllib.error
 
-gff_info_fields = ["contig", "source", "type", "start", "stop", "score", "strand", "phase", "attributes"]
-class GTFRecord(namedtuple("GTFRecord", gff_info_fields)):
+_gff_info_fields = ["contig", "source", "type", "start", "stop", "score", "strand", "phase", "attributes"]
+class GTFRecord(namedtuple("GTFRecord", _gff_info_fields)):
     @property
     def length(self):
         return self.stop - self.start
 
     def __repr__(self):
-        row = [self.contig, self.source, self.type, self.start, self.stop, self.score, self.strand, self.phase, encode_gtf_attributes(self.attributes)]
+        row = [self.contig, self.source, self.type, self.start, self.stop, self.score, self.strand, self.phase, self.encoded_attributes()]
         row = [elem if elem else '.'  for elem in row]
         return '\t'.join(map(str, row))
 
@@ -55,71 +54,81 @@ class GTFRecord(namedtuple("GTFRecord", gff_info_fields)):
             attributes_modified[attr_name] = attr_value
         return GTFRecord(self.contig, self.source, self.type, self.start, self.stop, self.score, self.strand, self.phase, attributes_modified)
 
-def encode_gtf_attributes(attributes):
-    if not attributes:
-        return '.'
-    attr_strings = [f'{k} {json.dumps(v)};' for k,v in attributes.items()]
-    return ' '.join(attr_strings)
+    def encoded_attributes(self):
+        return self.encode_gtf_attributes(self.attributes)
 
-def parse_gtf(filename, multivalue_keys=None):
-    """
-    A minimalistic GTF format parser.
-    Yields objects that contain info about a single GTF feature.
+    @classmethod
+    def encode_gtf_attributes(cls, attributes):
+        if not attributes:
+            return '.'
+        attr_strings = [f'{k} {json.dumps(v)};' for k,v in attributes.items()]
+        return ' '.join(attr_strings)
 
-    Supports transparent gzip decompression.
-    """
-    # Parse with transparent decompression
-    open_func = gzip.open if filename.endswith(".gz") else open
-    with open_func(filename, "rt", encoding='utf-8') as infile:
-        for line in infile:
-            if line.startswith("#"): continue
-            parts = line.strip().split("\t")
-            # If this fails, the file format is not standard-compatible
-            assert len(parts) == len(gff_info_fields)
-            assert parts[0] != '.'  # contig
-            assert parts[2] != '.'  # type
-            assert parts[3] != '.'  # start
-            assert parts[4] != '.'  # stop
-            assert parts[6] in {'+', '-'}
+    @classmethod
+    def each_in_file(cls, filename, multivalue_keys=None):
+        """
+        A minimalistic GTF format parser.
+        Yields objects that contain info about a single GTF feature.
 
-            # Normalize data
-            normalized_info = {
-                "contig": parts[0],
-                "source": None if parts[1] == "." else parts[1],
-                "type":   parts[2],
-                "start":  int(parts[3]) - 1, # 0-based, included
-                "stop":   int(parts[4]),     # 0-based, excluded
-                "score": None if parts[5] == "." else float(parts[5]),
-                "strand": parts[6],
-                "phase": None if parts[7] == "." else parts[7],
-                "attributes": parse_gtf_attributes(parts[8], multivalue_keys=multivalue_keys),
-            }
-            yield GTFRecord(**normalized_info)
+        Supports transparent gzip decompression.
+        """
+        # Parse with transparent decompression
+        open_func = gzip.open if filename.endswith(".gz") else open
+        with open_func(filename, "rt", encoding='utf-8') as infile:
+            for line in infile:
+                if line.startswith("#"): continue
+                parts = line.strip().split("\t")
+                # If this fails, the file format is not standard-compatible
+                assert len(parts) == len(_gff_info_fields)
+                assert parts[0] != '.'  # contig
+                assert parts[2] != '.'  # type
+                assert parts[3] != '.'  # start
+                assert parts[4] != '.'  # stop
+                assert parts[6] in {'+', '-'}
 
-def parse_gtf_attributes(attribute_string, multivalue_keys=None):
-    """Parse the GTF attribute column and return a dict"""
-    if attribute_string == ".":
-        return {}
-    ret = {}
-    for attribute in attribute_string.strip().rstrip(";").split(";"):
-        key, value = attribute.strip().split(" ", maxsplit=1)
+                # Normalize data
+                normalized_info = {
+                    "contig": parts[0],
+                    "source": None if parts[1] == "." else parts[1],
+                    "type":   parts[2],
+                    "start":  int(parts[3]) - 1, # 0-based, included
+                    "stop":   int(parts[4]),     # 0-based, excluded
+                    "score": None if parts[5] == "." else float(parts[5]),
+                    "strand": parts[6],
+                    "phase": None if parts[7] == "." else parts[7],
+                    "attributes": cls.parse_gtf_attributes(parts[8], multivalue_keys=multivalue_keys),
+                }
+                yield GTFRecord(**normalized_info)
 
-        if value[0] == '"':
-            val = value[1:-1]
-        else:
-            val = int(value)
+    @classmethod
+    def parse_gtf_attributes(cls, attribute_string, multivalue_keys=None):
+        """Parse the GTF attribute column and return a dict"""
+        if attribute_string == ".":
+            return {}
+        ret = {}
+        for attribute in attribute_string.strip().rstrip(";").split(";"):
+            key, value = attribute.strip().split(" ", maxsplit=1)
 
-        # Some records has several attributes with the same key
-        # (e.g. `tag tag_1; tag tag_2;`)
-        # We treat values for such keys as lists
-        if key not in multivalue_keys:
-            if key not in ret:
-                ret[key] = val
+            if value[0] == '"':
+                val = value[1:-1]
             else:
-                raise Exception(f'Key `{key}` already in attributes.\n'
-                                 'Probably you should add this attribute to a set of `multivalue_keys`')
-        else:
-            if key not in ret:
-                ret[key] = []
-            ret[key].append(val)
-    return ret
+                val = int(value)
+
+            # Some records has several attributes with the same key
+            # (e.g. `tag tag_1; tag tag_2;`)
+            # We treat values for such keys as lists
+            if key not in multivalue_keys:
+                if key not in ret:
+                    ret[key] = val
+                else:
+                    raise Exception(f'Key `{key}` already in attributes.\n'
+                                     'Probably you should add this attribute to a set of `multivalue_keys`')
+            else:
+                if key not in ret:
+                    ret[key] = []
+                ret[key].append(val)
+        return ret
+
+# deprecated
+def parse_gtf(filename, multivalue_keys=None):
+    yield from GTFRecord.each_in_file(filename, multivalue_keys=multivalue_keys)
