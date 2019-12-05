@@ -1,14 +1,8 @@
-from pybedtools import BedTool
 from decimal import Decimal
 import itertools
-import sys
 import numpy as np
 import coreutils_sort
 from dto.transcript_coverage import TranscriptCoverage
-
-def transcript_coverages_from_file(alignment_fn, sort_transcripts=False, dtype=float):
-    alignment = BedTool(alignment_fn)
-    yield from transcript_coverages_from_alignment(alignment, sort_transcripts=sort_transcripts, dtype=dtype)
 
 def transcript_coverages_from_alignment(alignment, sort_transcripts=False, dtype=float):
     bedgraph = make_coverage(alignment, sort_transcripts=sort_transcripts)
