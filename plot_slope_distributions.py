@@ -1,5 +1,4 @@
 from dto.coverage_comparison_stats import CoverageComparisonStats
-from slope import choose_best_transcript
 import sys
 import os
 import seaborn as sns
@@ -11,7 +10,7 @@ dirname = os.path.dirname(filename_wo_ext)
 basename = os.path.basename(filename_wo_ext)
 slope_data = list(CoverageComparisonStats.each_in_file(filename))
 slope_data = [info for info in slope_data  if info.geom_mean_coverage() >= 10]
-slope_data = list(choose_best_transcript(slope_data))
+slope_data = list(CoverageComparisonStats.choose_best_transcript(slope_data))
 print(len(slope_data))
 
 slopes = [info.slope for info in slope_data]

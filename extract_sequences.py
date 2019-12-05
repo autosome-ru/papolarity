@@ -1,5 +1,4 @@
 from annotation import Annotation
-from coding_transcript_info import CodingTranscriptInfo
 
 gtf_annotation_fn = 'source_data/annotation/gencode.vM22.basic.annotation.gtf.gz'
 assembly_fn = '/home/ilya/iogen/data/genome/mm10.fa'

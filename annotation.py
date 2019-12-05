@@ -3,7 +3,7 @@ from collections import namedtuple
 from gtf_parser import *
 from utils import take_the_only
 from fasta_reader import fasta_from_file
-from coding_transcript_info import CodingTranscriptInfo
+from dto.coding_transcript_info import CodingTranscriptInfo
 import itertools
 import pybedtools
 

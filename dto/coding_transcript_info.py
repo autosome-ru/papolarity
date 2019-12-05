@@ -13,14 +13,14 @@ class CodingTranscriptInfo(namedtuple("CodingTranscriptInfo", ['gene_id', 'trans
     def from_string(cls, line):
         row = line.rstrip("\n").split("\t")
         gene_id, transcript_id, transcript_length, cds_start, cds_stop = row
-        return CodingTranscriptInfo(gene_id, transcript_id, int(transcript_length), int(cds_start), int(cds_stop))
+        return cls(gene_id, transcript_id, int(transcript_length), int(cds_start), int(cds_stop))
 
     @classmethod
     def each_from_file(cls, filename):
         with open(filename) as f:
             header = f.readline()
             for line in f:
-                yield CodingTranscriptInfo.from_string(line)
+                yield cls.from_string(line)
 
     @classmethod
     def load_transcript_cds_info(cls, cds_annotation_filename):

@@ -1,6 +1,6 @@
 import sys
 from pybedtools import BedTool
-from coding_transcript_info import CodingTranscriptInfo
+from dto.coding_transcript_info import CodingTranscriptInfo
 from coverage_profile import transcript_coverages_from_alignment
 
 cds_annotation_fn = sys.argv[1] # 'gencode.vM22.cds_features.tsv'

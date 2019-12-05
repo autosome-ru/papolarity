@@ -1,3 +1,11 @@
+from dto.coding_transcript_info import CodingTranscriptInfo
+import sys
+from collections import namedtuple
+from polarity_score import polarity_score
+from profile_comparison import profile_difference, slope_by_profiles
+import numpy as np
+import itertools
+
 _coverage_stats_fields = [
     'transcript_info', 'slope',
     'control_mean_coverage', 'experiment_mean_coverage',
@@ -101,7 +109,7 @@ class CoverageComparisonStats(namedtuple('CoverageComparisonStats', _coverage_st
     def print(cls, infos, file=sys.stdout, extended=False):
         if extended:
             infos = list(infos)
-            best_transcript_ids = set(info.transcript_id for info in choose_best_transcript(infos))
+            best_transcript_ids = set(info.transcript_id for info in cls.choose_best_transcript(infos))
 
             print(cls.header() + '\t' + '\t'.join(['geom_mean_coverage', 'polarity_difference', 'is_best_transcript']), file=file)
             for info in infos:
@@ -120,3 +128,12 @@ class CoverageComparisonStats(namedtuple('CoverageComparisonStats', _coverage_st
 
     def polarity_difference(self):
         return self.experiment_polarity_score - self.control_polarity_score
+
+    # by default takes max by geometric mean of cds-mean between experiments
+    @classmethod
+    def choose_best_transcript(cls, slope_data, key=lambda info: info.geom_mean_coverage()):
+        by_gene = lambda info: info.gene_id
+        slope_data = sorted(slope_data, key=by_gene)
+        for (gene_id, infos) in itertools.groupby(slope_data, by_gene):
+            best_transcript_info = max(infos, key=key)
+            yield best_transcript_info

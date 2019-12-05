@@ -1,5 +1,5 @@
 from annotation import Annotation
-from coding_transcript_info import CodingTranscriptInfo
+from dto.coding_transcript_info import CodingTranscriptInfo
 import sys
 
 gtf_annotation_fn = sys.argv[1] # 'gencode.vM22.basic.annotation.gtf.gz'
