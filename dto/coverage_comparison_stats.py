@@ -5,89 +5,48 @@ from polarity_score import polarity_score
 from profile_comparison import profile_difference, slope_by_profiles
 import numpy as np
 import itertools
+import dataclasses
 
-_coverage_stats_fields = [
-    'cds_info', 'slope',
-    'control_mean_coverage', 'experiment_mean_coverage',
-    'control_total_coverage', 'experiment_total_coverage',
-    'control_polarity_score', 'experiment_polarity_score',
-    'num_segments',
-    'multipoint_slope', 'profile_difference',
-]
-
-class CoverageComparisonStats(namedtuple('CoverageComparisonStats', _coverage_stats_fields)):
-    @property
-    def gene_id(self):
-        return self.cds_info.gene_id
-
-    @property
-    def transcript_id(self):
-        return self.cds_info.transcript_id
-
-    @property
-    def transcript_length(self):
-        return self.cds_info.transcript_length
+@dataclasses.dataclass
+class CoverageComparisonStats:
+    gene_id: str
+    transcript_id: str
+    transcript_length: int
+    cds_start: int
+    cds_stop: int
+    slope: float
+    control_mean_coverage: float
+    experiment_mean_coverage: float
+    control_total_coverage: float
+    experiment_total_coverage: float
+    control_polarity_score: float
+    experiment_polarity_score: float
+    num_segments: int
+    multipoint_slope: float
+    profile_difference: float
 
     @property
-    def cds_start(self):
-        return self.cds_info.cds_start
+    def cds_info(self):
+        return CodingTranscriptInfo(self.gene_id, self.transcript_id, self.transcript_length, self.cds_start, self.cds_stop)
 
-    @property
-    def cds_stop(self):
-        return self.cds_info.cds_stop
-
-    def __repr__(self):
-        fields = [
-            self.gene_id, self.transcript_id, self.transcript_length, self.cds_start, self.cds_stop,
-            self.slope,
-            self.control_mean_coverage, self.experiment_mean_coverage,
-            self.control_total_coverage, self.experiment_total_coverage,
-            self.control_polarity_score, self.experiment_polarity_score,
-            self.num_segments,
-            self.multipoint_slope, self.profile_difference,
-        ]
+    def __str__(self):
+        fields = [getattr(self, field.name) for field in dataclasses.fields(self)]
         return '\t'.join(map(str, fields))
 
     @classmethod
     def header(cls):
-        fields = [
-            'gene_id', 'transcript_id', 'transcript_length', 'cds_start', 'cds_stop',
-            'slope',
-            'control_mean_coverage', 'experiment_mean_coverage',
-            'control_total_coverage', 'experiment_total_coverage',
-            'control_polarity_score', 'experiment_polarity_score',
-            'num_segments',
-            'multipoint_slope', 'profile_difference',
-        ]
+        fields = [field.name for field in dataclasses.fields(cls)]
         return '\t'.join(fields)
 
     @classmethod
     def from_string(cls, line):
         row = line.rstrip('\n').split('\t')
-        gene_id, transcript_id, transcript_length, cds_start, cds_stop, \
-            slope, \
-            control_mean_coverage, experiment_mean_coverage, \
-            control_total_coverage, experiment_total_coverage, \
-            control_polarity_score, experiment_polarity_score, \
-            num_segments, \
-            multipoint_slope, profile_difference, \
-            *rest = row
-        info = {
-            'cds_info': CodingTranscriptInfo(gene_id, transcript_id, int(transcript_length), int(cds_start), int(cds_stop)),
-            'slope': float(slope),
-            'control_mean_coverage': float(control_mean_coverage), 'experiment_mean_coverage': float(experiment_mean_coverage),
-            'control_total_coverage': int(control_total_coverage), 'experiment_total_coverage': int(experiment_total_coverage),
-            'control_polarity_score': float(control_polarity_score), 'experiment_polarity_score': float(experiment_polarity_score),
-            'num_segments': int(num_segments),
-            'multipoint_slope': float(multipoint_slope),
-            'profile_difference': float(profile_difference),
-        }
-        return cls(**info)
+        return cls(*[field.type(value) for field, value in zip(dataclasses.fields(cls), row)])
 
     @classmethod
     def make_from_profiles(cls, cds_info, cds_profile_control, cds_profile_experiment, segments):
         info = {
-            'cds_info': cds_info,
+            **dataclass.asdict(cds_info),
             'slope': slope_by_profiles(cds_profile_control, cds_profile_experiment, segments, mode='center'),
             'control_mean_coverage': np.mean(cds_profile_control), 'experiment_mean_coverage': np.mean(cds_profile_experiment),
             'control_total_coverage': np.sum(cds_profile_control), 'experiment_total_coverage': np.sum(cds_profile_experiment),
