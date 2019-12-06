@@ -6,9 +6,10 @@ from profile_comparison import profile_difference, slope_by_profiles
 import numpy as np
 import itertools
 import dataclasses
+from dto.dataclass_tsv_serializable import DataclassTsvSerializable
 
 @dataclasses.dataclass
-class CoverageComparisonStats:
+class CoverageComparisonStats(DataclassTsvSerializable):
     gene_id: str
     transcript_id: str
     transcript_length: int
@@ -29,20 +30,6 @@ class CoverageComparisonStats:
     def cds_info(self):
         return CodingTranscriptInfo(self.gene_id, self.transcript_id, self.transcript_length, self.cds_start, self.cds_stop)
 
-    def __str__(self):
-        fields = [getattr(self, field.name) for field in dataclasses.fields(self)]
-        return '\t'.join(map(str, fields))
-
-    @classmethod
-    def header(cls):
-        fields = [field.name for field in dataclasses.fields(cls)]
-        return '\t'.join(fields)
-
-    @classmethod
-    def from_string(cls, line):
-        row = line.rstrip('\n').split('\t')
-        return cls(*[field.type(value) for field, value in zip(dataclasses.fields(cls), row)])
-
     @classmethod
     def make_from_profiles(cls, cds_info, cds_profile_control, cds_profile_experiment, segments):
         info = {
@@ -56,13 +43,6 @@ class CoverageComparisonStats:
             'profile_difference': profile_difference(cds_profile_control, cds_profile_experiment, segments),
         }
         return cls(**info)
-
-    @classmethod
-    def each_in_file(cls, filename):
-        with open(filename) as f:
-            header = f.readline()
-            for line in f:
-                yield cls.from_string(line)
 
     @classmethod
     def print(cls, infos, file=sys.stdout, extended=False):
