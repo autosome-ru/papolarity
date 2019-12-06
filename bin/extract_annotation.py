@@ -11,5 +11,5 @@ annotation = Annotation.load(gtf_annotation_fn,
 
 print(CodingTranscriptInfo.header())
 for transcript_id in annotation.transcript_by_id:
-    transcript_info = annotation.coding_transcript_info(transcript_id)
-    print(transcript_info)
+    cds_info = annotation.coding_transcript_info(transcript_id)
+    print(cds_info)

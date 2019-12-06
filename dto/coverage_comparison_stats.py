@@ -7,7 +7,7 @@ import numpy as np
 import itertools
 
 _coverage_stats_fields = [
-    'transcript_info', 'slope',
+    'cds_info', 'slope',
     'control_mean_coverage', 'experiment_mean_coverage',
     'control_total_coverage', 'experiment_total_coverage',
     'control_polarity_score', 'experiment_polarity_score',
@@ -18,23 +18,23 @@ _coverage_stats_fields = [
 class CoverageComparisonStats(namedtuple('CoverageComparisonStats', _coverage_stats_fields)):
     @property
     def gene_id(self):
-        return self.transcript_info.gene_id
+        return self.cds_info.gene_id
 
     @property
     def transcript_id(self):
-        return self.transcript_info.transcript_id
+        return self.cds_info.transcript_id
 
     @property
     def transcript_length(self):
-        return self.transcript_info.transcript_length
+        return self.cds_info.transcript_length
 
     @property
     def cds_start(self):
-        return self.transcript_info.cds_start
+        return self.cds_info.cds_start
 
     @property
     def cds_stop(self):
-        return self.transcript_info.cds_stop
+        return self.cds_info.cds_stop
 
     def __repr__(self):
         fields = [
@@ -73,7 +73,7 @@ class CoverageComparisonStats(namedtuple('CoverageComparisonStats', _coverage_st
             multipoint_slope, profile_difference, \
             *rest = row
         info = {
-            'transcript_info': CodingTranscriptInfo(gene_id, transcript_id, int(transcript_length), int(cds_start), int(cds_stop)),
+            'cds_info': CodingTranscriptInfo(gene_id, transcript_id, int(transcript_length), int(cds_start), int(cds_stop)),
             'slope': float(slope),
             'control_mean_coverage': float(control_mean_coverage), 'experiment_mean_coverage': float(experiment_mean_coverage),
             'control_total_coverage': int(control_total_coverage), 'experiment_total_coverage': int(experiment_total_coverage),
@@ -85,9 +85,9 @@ class CoverageComparisonStats(namedtuple('CoverageComparisonStats', _coverage_st
         return cls(**info)
 
     @classmethod
-    def make_from_profiles(cls, transcript_info, cds_profile_control, cds_profile_experiment, segments):
+    def make_from_profiles(cls, cds_info, cds_profile_control, cds_profile_experiment, segments):
         info = {
-            'transcript_info': transcript_info,
+            'cds_info': cds_info,
             'slope': slope_by_profiles(cds_profile_control, cds_profile_experiment, segments, mode='center'),
             'control_mean_coverage': np.mean(cds_profile_control), 'experiment_mean_coverage': np.mean(cds_profile_experiment),
             'control_total_coverage': np.sum(cds_profile_control), 'experiment_total_coverage': np.sum(cds_profile_experiment),
