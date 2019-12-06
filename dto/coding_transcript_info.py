@@ -1,22 +1,31 @@
 from collections import namedtuple
+import dataclasses
 
 # cds_start and cds_stop are 0-based related to transcript
-class CodingTranscriptInfo(namedtuple("CodingTranscriptInfo", ['gene_id', 'transcript_id', 'transcript_length', 'cds_start', 'cds_stop'])):
+@dataclasses.dataclass
+class CodingTranscriptInfo:
+    gene_id: str
+    transcript_id: str
+    transcript_length: int
+    cds_start: int
+    cds_stop: int
+
     @classmethod
     def header(cls):
-        return '\t'.join(['gene_id', 'transcript_id', 'transcript_length', 'cds_start', 'cds_stop'])
+        fields = [field.name for field in dataclasses.fields(cls)]
+        return '\t'.join(fields)
 
-    def __repr__(self):
-        return '\t'.join(map(str, [self.gene_id, self.transcript_id, self.transcript_length, self.cds_start, self.cds_stop]))
+    def __str__(self):
+        fields = [getattr(self, field.name) for field in dataclasses.fields(self)]
+        return '\t'.join(map(str, fields))
 
     @classmethod
     def from_string(cls, line):
-        row = line.rstrip("\n").split("\t")
-        gene_id, transcript_id, transcript_length, cds_start, cds_stop = row
-        return cls(gene_id, transcript_id, int(transcript_length), int(cds_start), int(cds_stop))
+        row = line.rstrip('\n').split('\t')
+        return cls(*[field.type(value) for field, value in zip(dataclasses.fields(cls), row)])
 
     @classmethod
-    def each_from_file(cls, filename):
+    def each_in_file(cls, filename):
         with open(filename) as f:
             header = f.readline()
             for line in f:
@@ -24,7 +33,7 @@ class CodingTranscriptInfo(namedtuple("CodingTranscriptInfo", ['gene_id', 'trans
 
     @classmethod
     def load_transcript_cds_info(cls, cds_annotation_filename):
-        transcript_infos = cls.each_from_file(cds_annotation_filename)
+        transcript_infos = cls.each_in_file(cds_annotation_filename)
         return {tr_info.transcript_id: tr_info  for tr_info in transcript_infos}
 
     @property
