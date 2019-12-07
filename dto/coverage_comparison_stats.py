@@ -1,10 +1,9 @@
 from dto.coding_transcript_info import CodingTranscriptInfo
 import sys
-from collections import namedtuple
 from polarity_score import polarity_score
 from profile_comparison import profile_difference, slope_by_profiles
 import numpy as np
-import itertools
+from itertools import groupby
 import dataclasses
 from dto.dataclass_tsv_serializable import DataclassTsvSerializable
 
@@ -73,6 +72,6 @@ class CoverageComparisonStats(DataclassTsvSerializable):
     def choose_best_transcript(cls, slope_data, key=lambda info: info.geom_mean_coverage()):
         by_gene = lambda info: info.gene_id
         slope_data = sorted(slope_data, key=by_gene)
-        for (gene_id, infos) in itertools.groupby(slope_data, by_gene):
+        for (gene_id, infos) in groupby(slope_data, by_gene):
             best_transcript_info = max(infos, key=key)
             yield best_transcript_info

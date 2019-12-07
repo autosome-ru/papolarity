@@ -1,4 +1,3 @@
-from collections import namedtuple
 from dto.dataclass_tsv_serializable import DataclassTsvSerializable
 import dataclasses
 
