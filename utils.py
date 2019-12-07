@@ -5,13 +5,13 @@ def take_the_only(arr):
         raise Exception('No elements when one is expected')
     return arr[0]
 
-def common_subsequence(iterators, key=lambda x: x):
-    for (key, aligned_objects) in align_iterators(iterators, key=key):
+def common_subsequence(iterators, key=lambda x: x, check_sorted=False):
+    for (key, aligned_objects) in align_iterators(iterators, key=key, check_sorted=check_sorted):
         if all(aligned_objects):
             yield (key, aligned_objects)
 
 _sentinel_key = object()
-def align_iterators(iterators, key=lambda x: x, object_missing=None):
+def align_iterators(iterators, key=lambda x: x, object_missing=None, check_sorted=False):
     '''
     Take a list of iterables yielding objects whose `key` values increase
     strictly monotonically. At each iteration yield a pair consisting of
@@ -33,7 +33,10 @@ def align_iterators(iterators, key=lambda x: x, object_missing=None):
         aligned_objects = [(objects[idx] if idx in matching_idxs else None)  for idx in range(num_iters)]
         yield (min_key, aligned_objects)
         for idx in matching_idxs:
+            old_key = keys[idx]
             objects[idx], keys[idx], exhausted[idx] = _next_unless_exhausted(iterators[idx], key, exhausted[idx])
+            if check_sorted and (keys[idx] is not _sentinel_key) and (keys[idx] <= old_key):
+                raise ValueError(f"Iterator at index `{idx}` is not sorted: `{keys[idx]}` follows `{old_key}`")
 
 def _next_unless_exhausted(iterator, key, exhausted, object_missing=None):
     '''
