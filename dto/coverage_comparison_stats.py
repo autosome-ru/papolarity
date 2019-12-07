@@ -49,13 +49,13 @@ class CoverageComparisonStats(DataclassTsvSerializable):
             infos = list(infos)
             best_transcript_ids = set(info.transcript_id for info in cls.choose_best_transcript(infos))
 
-            print(cls.header() + '\t' + '\t'.join(['geom_mean_coverage', 'polarity_difference', 'is_best_transcript']), file=file)
+            print('\t'.join([cls.header(), 'geom_mean_coverage', 'polarity_difference', 'is_best_transcript']), file=file)
             for info in infos:
                 if info.transcript_id in best_transcript_ids:
                     is_best_transcript = '+'
                 else:
                     is_best_transcript = '-'
-                print(str(info) + '\t' + '\t'.join(map(str, [info.geom_mean_coverage(), info.polarity_difference(), is_best_transcript])), file=file)
+                print('\t'.join(map(str, [info, info.geom_mean_coverage(), info.polarity_difference(), is_best_transcript])), file=file)
         else:
             print(cls.header(), file=file)
             for info in infos:
