@@ -2,7 +2,7 @@ from dto.dataclass_tsv_serializable import DataclassTsvSerializable
 import dataclasses
 
 # cds_start and cds_stop are 0-based related to transcript
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True)
 class CodingTranscriptInfo(DataclassTsvSerializable):
     gene_id: str
     transcript_id: str

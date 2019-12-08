@@ -7,7 +7,7 @@ from itertools import groupby
 import dataclasses
 from dto.dataclass_tsv_serializable import DataclassTsvSerializable
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True)
 class CoverageComparisonStats(DataclassTsvSerializable):
     gene_id: str
     transcript_id: str
