@@ -16,9 +16,15 @@ class DataclassTsvSerializable:
         return '\t'.join(map(str, fields))
 
     @classmethod
-    def from_string(cls, line):
+    def from_string(cls, line, **kwargs):
         row = line.rstrip('\n').split('\t')
-        return cls(*[field.type(value) for field, value in zip(dataclasses.fields(cls), row)])
+        attrs = {}
+        for field, value in zip(dataclasses.fields(cls), row):
+            if field.metadata.get('skip_conversion', False):
+                attrs[field.name] = value
+            else:
+                attrs[field.name] = field.type(value)
+        return cls(**attrs, **kwargs)
 
     @classmethod
     def each_in_file(cls, filename, header=True):
