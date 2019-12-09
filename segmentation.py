@@ -1,6 +1,7 @@
 from utils import pool_profiles
 import logging
 import pasio
+import numpy as np
 
 logger = logging.getLogger('pasio')
 logger.setLevel(logging.WARNING)
