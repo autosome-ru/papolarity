@@ -6,8 +6,9 @@ def take_the_only(arr):
     return arr[0]
 
 def common_subsequence(iterators, key=lambda x: x, check_sorted=False):
-    for (key, aligned_objects) in align_iterators(iterators, key=key, check_sorted=check_sorted):
-        if all(aligned_objects):
+    sentinel = object()
+    for (key, aligned_objects) in align_iterators(iterators, key=key, object_missing=sentinel, check_sorted=check_sorted):
+        if sentinel not in aligned_objects:
             yield (key, aligned_objects)
 
 _sentinel_key = object()
@@ -36,7 +37,7 @@ def align_iterators(iterators, key=lambda x: x, object_missing=None, check_sorte
     while not all(exhausted):
         min_key = min(k for k in key_values if k is not _sentinel_key)
         matching_idxs = {idx  for (idx, k) in enumerate(key_values)  if k == min_key}
-        aligned_objects = [(objects[idx] if idx in matching_idxs else None)  for idx in range(num_iters)]
+        aligned_objects = [(objects[idx] if idx in matching_idxs else object_missing)  for idx in range(num_iters)]
         yield (min_key, aligned_objects)
         for idx in matching_idxs:
             old_key_value = key_values[idx]
