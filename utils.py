@@ -19,24 +19,30 @@ def align_iterators(iterators, key=lambda x: x, object_missing=None, check_sorte
     If one of iterators doesn't contain corresponding value or yields,
     then `object_missing` (which is `None` by default) is substituted 
     at that place.
+    `key` can be either a callable object (same key for each iterator)
+    or a list of callable objects (one key per iterator)
     '''
     iterators = [iter(iterator) for iterator in iterators]
     num_iters = len(iterators)
     exhausted = [False] * num_iters
     objects = [None] * num_iters
-    keys = [_sentinel_key] * num_iters
+    if callable(key):
+        key = [key for _ in iterators]
+    else:
+        assert len(iterators) == len(key)
+    key_values = [_sentinel_key] * num_iters
     for idx in range(num_iters):
-        objects[idx], keys[idx], exhausted[idx] = _next_unless_exhausted(iterators[idx], key, exhausted[idx], object_missing=object_missing)
+        objects[idx], key_values[idx], exhausted[idx] = _next_unless_exhausted(iterators[idx], key[idx], exhausted[idx], object_missing=object_missing)
     while not all(exhausted):
-        min_key = min(k for k in keys if k is not _sentinel_key)
-        matching_idxs = {idx  for (idx, k) in enumerate(keys)  if k == min_key}
+        min_key = min(k for k in key_values if k is not _sentinel_key)
+        matching_idxs = {idx  for (idx, k) in enumerate(key_values)  if k == min_key}
         aligned_objects = [(objects[idx] if idx in matching_idxs else None)  for idx in range(num_iters)]
         yield (min_key, aligned_objects)
         for idx in matching_idxs:
-            old_key = keys[idx]
-            objects[idx], keys[idx], exhausted[idx] = _next_unless_exhausted(iterators[idx], key, exhausted[idx])
-            if check_sorted and (keys[idx] is not _sentinel_key) and (keys[idx] <= old_key):
-                raise ValueError(f"Iterator at index `{idx}` is not sorted: `{keys[idx]}` follows `{old_key}`")
+            old_key_value = key_values[idx]
+            objects[idx], key_values[idx], exhausted[idx] = _next_unless_exhausted(iterators[idx], key[idx], exhausted[idx])
+            if check_sorted and (key_values[idx] is not _sentinel_key) and (key_values[idx] <= old_key_value):
+                raise ValueError(f"Iterator at index `{idx}` is not sorted: `{key_values[idx]}` follows `{old_key_value}`")
 
 def _next_unless_exhausted(iterator, key, exhausted, object_missing=None):
     '''
