@@ -60,5 +60,17 @@ def _next_unless_exhausted(iterator, key, exhausted, object_missing=None):
     else:
         return (object_missing, _sentinel_key, True)
 
+import numpy as np
+from dto.coverage_interval import CoverageInterval
+
 def pool_profiles(profiles):
-    return [sum(pos_vals) for pos_vals in zip(*profiles)]
+    return np.sum(profiles, axis=0)
+
+def get_constant_intervals(profile):
+    if len(profile) == 0:
+        return []
+    last_value_indices = np.nonzero(np.diff(profile))[0]
+    start_indices_inclusive = np.concatenate(([0], last_value_indices + 1))
+    end_indices_exclusive = np.concatenate( (last_value_indices + 1, [len(profile)]) )
+    for (start, end) in zip(start_indices_inclusive, end_indices_exclusive):
+        yield (start, end, profile[start])
