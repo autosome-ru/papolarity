@@ -1,6 +1,6 @@
 import sys
 import dataclasses
-import gzip
+from gzip_utils import open_for_read, open_for_write
 
 @dataclasses.dataclass
 class DataclassTsvSerializable:
@@ -28,22 +28,8 @@ class DataclassTsvSerializable:
         return cls(**attrs, **kwargs)
 
     @classmethod
-    def _open_func(gzip, filename):
-        '''
-        If `gzip` is True or False, use corresponding open function.
-        If `gzip` is None, it's guessed based on filename extension
-        '''
-        if (gzip is True) or ((gzip is None) and filename.endswith('.gz')):
-            open_func = gzip.open
-        else (gzip is False) or ((gzip is None) and not filename.endswith('.gz')):
-            open_func = open
-        else:
-            raise ValueError("gzip should be one of True/False/None")
-
-    @classmethod
-    def each_in_file(cls, filename, header=True, gzip=None):
-        open_func = cls._open_func(gzip=gzip, filename=file)
-        with open_func(filename, 'rt') as f:
+    def each_in_file(cls, filename, header=True, force_gzip=None):
+        with open_for_read(filename, force_gzip=force_gzip) as f:
             if header:
                 f.readline() # skip header
             for line in f:
@@ -57,8 +43,6 @@ class DataclassTsvSerializable:
             print(record.tsv_string(), file=file)
 
     @classmethod
-    def store_tsv(cls, collection, filename, header=True, gzip=None):
-        open_func = cls._open_func(gzip=gzip, filename=file)
-        with open_func(filename, 'wt') as f:
+    def store_tsv(cls, collection, filename, header=True, force_gzip=None):
+        with open_for_write(filename, force_gzip=force_gzip) as f:
             cls.print_tsv(collection, f, header=header)
-    

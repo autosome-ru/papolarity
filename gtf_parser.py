@@ -72,9 +72,7 @@ class GTFRecord(namedtuple("GTFRecord", _gff_info_fields)):
 
         Supports transparent gzip decompression.
         """
-        # Parse with transparent decompression
-        open_func = gzip.open if filename.endswith(".gz") else open
-        with open_func(filename, "rt", encoding='utf-8') as infile:
+        with open_for_read(filename, encoding='utf-8') as infile:
             for line in infile:
                 if line.startswith("#"): continue
                 parts = line.strip().split("\t")
