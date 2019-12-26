@@ -4,9 +4,9 @@ from os.path import dirname
 sys.path.insert(0, dirname(dirname(__file__)))
 import argparse
 import gzip
-from coverage_profile import transcript_coverages_from_bedgraph
 from utils import align_iterators, pool_profiles, get_constant_intervals
 from dto.coverage_interval import CoverageInterval
+from dto.transcript_coverage import TranscriptCoverage
 from gzip_utils import open_for_write
 
 def get_argparser():
@@ -30,8 +30,7 @@ elif args.dtype == 'float':
 else:
     raise ValueError('dtype should be either int or float')
 
-bedgraph_streams = [CoverageInterval.each_in_file(coverage_fn, header=False) for coverage_fn in args.coverages]
-coverage_streams = [transcript_coverages_from_bedgraph(bedgraph_stream, dtype=dtype) for bedgraph_stream in bedgraph_streams]
+coverage_streams = [TranscriptCoverage.each_in_file(coverage_fn, header=False, dtype=dtype) for coverage_fn in args.coverages]
 
 with open_for_write(args.output_file) as output_stream:
     aligned_transcripts = align_iterators(coverage_streams, key=lambda transcript_coverage: transcript_coverage.transcript_id, check_sorted=True)

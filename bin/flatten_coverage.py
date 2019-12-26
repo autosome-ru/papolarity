@@ -6,11 +6,11 @@ import math
 import argparse
 from contextlib import nullcontext
 import gzip
-from coverage_profile import transcript_coverages_from_bedgraph
 from pybedtools import BedTool
 from utils import align_iterators, pool_profiles, get_constant_intervals
 from gzip_utils import open_for_write
 from dto.coverage_interval import CoverageInterval
+from dto.transcript_coverage import TranscriptCoverage
 from segmentation import Segmentation
 import pasio
 
@@ -40,8 +40,7 @@ elif args.rounding in ['no', 'none']:
 else:
     raise ValueError('rounding should be either int or float')
 
-bedgraph_stream = CoverageInterval.each_in_file(args.coverage, header=False)
-transcript_coverage_stream = transcript_coverages_from_bedgraph(bedgraph_stream, dtype=float)
+transcript_coverage_stream = TranscriptCoverage.each_in_file(args.coverage, header=False, dtype=float)
 
 segmentation_stream = Segmentation.each_in_file(args.segmentation, header=False)
 
@@ -52,7 +51,6 @@ with open_for_write(args.output_file) as output_stream:
             continue
         if (segmentation is None) and args.only_matching:
             continue
-
         if segmentation is not None:
             transcript_coverage = segmentation.stabilize_profile(transcript_coverage.coverage)
         coverage_intervals = get_constant_intervals(transcript_coverage)

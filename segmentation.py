@@ -25,6 +25,18 @@ class Segmentation:
     chrom: str
     segments: List[Interval] # bed-coordinates [a, b)
 
+    def __post_init__(self):
+        if any(self.chrom != segment.chrom for segment in self.segments):
+            raise ValueError(f"Segmentation intervals all should be on specified chromosome/contig `{self.chrom}`")
+        if len(self.segments) > 0 and self.segments[0].start != 0:
+            raise ValueError(f"Segmentation should cover entire interval (but first segment {self.segments[0]} doesn't start from zero)")
+        if any(self.segments[i].stop != self.segments[i + 1].start for i in range(len(self.segments) - 1)):
+            raise ValueError(f"Segments should be contigious but weren't: {self.segments}")
+        object.__setattr__(self, 'segments', sorted(self.segments)) # assign frozen attribute.
+
+    def __len__(self):
+        return self.segments[-1].stop
+
     def stabilize_profile(self, profile):
         stable_profile = np.zeros_like(profile)
         for segment in self.segments:
