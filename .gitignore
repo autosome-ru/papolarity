@@ -1,3 +1,9 @@
+*.bedgraph
+*.bedGraph
+*.bedgraph.gz
+*.bedGraph.gz
+*.tsv.gz
+*.tar.gz
 *.pyc
 *.png
 *.txt
