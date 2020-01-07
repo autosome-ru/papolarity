@@ -12,12 +12,7 @@ class TranscriptComparator:
         self.drop_start_flank = drop_start_flank
         self.drop_stop_flank = drop_stop_flank
 
-    def compare_multiple_alignments(self, alignment_control, alignment_experiment):
-        coverages_control = transcript_coverages_from_alignment(alignment_control, sort_transcripts=True, dtype=int)
-        coverages_experiment = transcript_coverages_from_alignment(alignment_experiment, sort_transcripts=True, dtype=int)
-        yield from self.compare_two_coverages(coverages_control, coverages_experiment)
-
-    def compare_two_coverages(self, coverages_control, coverages_experiment):
+    def compare_coverage_streams(self, coverages_control, coverages_experiment):
         get_transcript_id = lambda transcript_coverage: transcript_coverage.transcript_id
         common_transcripts = common_subsequence([coverages_control, coverages_experiment], key=get_transcript_id)
         for (transcript_id, (coverage_control, coverage_experiment)) in common_transcripts:
