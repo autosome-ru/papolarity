@@ -11,7 +11,7 @@ class TranscriptCoverage:
     @classmethod
     def each_in_file(cls, filename, header=False, dtype=float):
         bedgraph_stream = CoverageInterval.each_in_file(filename, header=False)
-        yield from cls.each_in_bedgraph(bedgraph_stream, dtype=float)
+        yield from cls.each_in_bedgraph(bedgraph_stream, dtype=dtype)
 
     @classmethod
     def each_in_bedgraph(cls, bedgraph_stream, dtype=float):
