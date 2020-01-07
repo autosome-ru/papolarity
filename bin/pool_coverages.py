@@ -38,6 +38,7 @@ with open_for_write(args.output_file) as output_stream:
     for (transcript_id, coverages) in aligned_transcripts:
         if args.only_matching and not all(coverages):
             continue
+        coverages = filter(lambda x: x, coverages)
         coverages = [transcript_coverage.coverage for transcript_coverage in coverages]
         if args.output_mode == 'sum':
             pooled_coverage_profile = np.sum(coverages, axis=0)
