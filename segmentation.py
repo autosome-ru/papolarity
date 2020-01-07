@@ -45,6 +45,18 @@ class Segmentation:
             stable_profile[start:stop] = np.mean(profile[start:stop])
         return stable_profile
 
+    def clip(self, flank_5, flank_3):
+        clip_len = len(self) - flank_3 - flank_5
+        clipped_segments = []
+        for segment in self.segments:
+            segment_start = max(0, segment.start - flank_5)
+            segment_stop = min(clip_len, segment.stop - flank_5)
+            if (segment_stop <= 0) or (clip_len <= segment_start):
+                continue
+            clipped_segment = Interval(self.chrom, segment_start, segment_stop)
+            clipped_segments.append(clipped_segment)
+        return Segmentation(self.chrom, clipped_segments)
+
     @classmethod
     def each_in_file(cls, filename, force_gzip=None, header=False):
         segment_stream = Interval.each_in_file(filename, header=header, force_gzip=force_gzip)
