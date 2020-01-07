@@ -34,8 +34,13 @@ class Segmentation:
         if any(self.segments[i].stop != self.segments[i + 1].start for i in range(len(self.segments) - 1)):
             raise ValueError(f"Segments should be contigious but weren't: {self.segments}")
 
-    def __len__(self):
+    @property
+    def segmentation_length(self):
         return self.segments[-1].stop
+
+    @property
+    def num_segments(self):
+        return len(self.segments)
 
     def stabilize_profile(self, profile):
         stable_profile = np.zeros_like(profile)
@@ -45,8 +50,13 @@ class Segmentation:
             stable_profile[start:stop] = np.mean(profile[start:stop])
         return stable_profile
 
-    def clip(self, flank_5, flank_3):
-        clip_len = len(self) - flank_3 - flank_5
+    # clip flanks so that region is in specified window
+    def clip_to_window(self, start, stop):
+        return self.clip_flanks(start, self.segmentation_length - stop)
+
+    # clip flanks of specified length
+    def clip_flanks(self, flank_5, flank_3):
+        clip_len = self.segmentation_length - flank_3 - flank_5
         clipped_segments = []
         for segment in self.segments:
             segment_start = max(0, segment.start - flank_5)
