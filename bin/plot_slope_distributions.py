@@ -1,3 +1,6 @@
+import sys
+from os.path import dirname
+sys.path.insert(0, dirname(dirname(__file__)))
 from dto.coverage_comparison_stats import CoverageComparisonStats
 import sys
 import os
