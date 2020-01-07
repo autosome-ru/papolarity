@@ -32,7 +32,7 @@ class CoverageComparisonStats(DataclassTsvSerializable):
     @classmethod
     def make_from_profiles(cls, cds_info, cds_profile_control, cds_profile_experiment, segments):
         info = {
-            **dataclass.asdict(cds_info),
+            **dataclasses.asdict(cds_info),
             'slope': slope_by_profiles(cds_profile_control, cds_profile_experiment, segments, mode='center'),
             'control_mean_coverage': np.mean(cds_profile_control), 'experiment_mean_coverage': np.mean(cds_profile_experiment),
             'control_total_coverage': np.sum(cds_profile_control), 'experiment_total_coverage': np.sum(cds_profile_experiment),
