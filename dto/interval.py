@@ -1,5 +1,6 @@
 import dataclasses
 from dto.dataclass_tsv_serializable import DataclassTsvSerializable
+from typing import List, Any
 
 @dataclasses.dataclass(order=True)
 class Interval(DataclassTsvSerializable):
@@ -7,6 +8,7 @@ class Interval(DataclassTsvSerializable):
     chrom: str
     start: int
     stop: int
+    rest: List[Any] = dataclasses.field(default_factory=list, metadata={'skip_conversion': True})
 
     def __post_init__(self):
         if not isinstance(self.chrom, str):
