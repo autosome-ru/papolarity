@@ -2,17 +2,18 @@ from sklearn.linear_model import LinearRegression
 import numpy as np
 from math import log
 
-def slope_by_profiles(control_profile, experiment_profile, segments, mode='center'):
+def slope_by_profiles(control_profile, experiment_profile, segmentation, mode='center'):
     total_coverage_control = sum(control_profile)
     total_coverage_experiment = sum(experiment_profile)
     assert len(control_profile) == len(experiment_profile)
+    assert len(control_profile) == segmentation.segmentation_length
     profile_len = len(control_profile)
     model = LinearRegression()
     xs = []
     ys = []
     sample_weights = []
-    num_segments = len(segments)
-    for segment in segments:
+    num_segments = segmentation.num_segments
+    for segment in segmentation.segments:
         start = segment.start
         stop = segment.stop
         mean_control = np.mean(control_profile[start:stop])
@@ -48,14 +49,14 @@ def slope_by_profiles(control_profile, experiment_profile, segments, mode='cente
     slope = model.coef_[0]
     return slope
 
-def profile_difference(control_profile, experiment_profile, segments):
+def profile_difference(control_profile, experiment_profile, segmentation):
     assert len(control_profile) == len(experiment_profile)
     control_profile_sum = np.sum(control_profile)
     experiment_profile_sum = np.sum(experiment_profile)
     normed_control_profile = control_profile / control_profile_sum  if control_profile_sum != 0  else control_profile
     normed_experiment_profile = experiment_profile / experiment_profile_sum  if experiment_profile_sum != 0  else experiment_profile
     difference = 0
-    for segment in segments:
+    for segment in segmentation.segments:
         start = segment.start
         stop = segment.stop
         mean_control = np.mean(normed_control_profile[start:stop])

@@ -30,16 +30,16 @@ class CoverageComparisonStats(DataclassTsvSerializable):
         return CodingTranscriptInfo(self.gene_id, self.transcript_id, self.transcript_length, self.cds_start, self.cds_stop)
 
     @classmethod
-    def make_from_profiles(cls, cds_info, cds_profile_control, cds_profile_experiment, segments):
+    def make_from_profiles(cls, cds_info, cds_profile_control, cds_profile_experiment, segmentation):
         info = {
             **dataclasses.asdict(cds_info),
-            'slope': slope_by_profiles(cds_profile_control, cds_profile_experiment, segments, mode='center'),
+            'slope': slope_by_profiles(cds_profile_control, cds_profile_experiment, segmentation, mode='center'),
             'control_mean_coverage': np.mean(cds_profile_control), 'experiment_mean_coverage': np.mean(cds_profile_experiment),
             'control_total_coverage': np.sum(cds_profile_control), 'experiment_total_coverage': np.sum(cds_profile_experiment),
             'control_polarity_score': polarity_score(cds_profile_control), 'experiment_polarity_score': polarity_score(cds_profile_experiment),
-            'num_segments': len(segments),
-            'multipoint_slope': slope_by_profiles(cds_profile_control, cds_profile_experiment, segments, mode='every_point'),
-            'profile_difference': profile_difference(cds_profile_control, cds_profile_experiment, segments),
+            'num_segments': segmentation.num_segments,
+            'multipoint_slope': slope_by_profiles(cds_profile_control, cds_profile_experiment, segmentation, mode='every_point'),
+            'profile_difference': profile_difference(cds_profile_control, cds_profile_experiment, segmentation),
         }
         return cls(**info)
 

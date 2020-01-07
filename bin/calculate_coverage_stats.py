@@ -7,8 +7,6 @@ from segmentation import Segmentation
 from dto.coding_transcript_info import CodingTranscriptInfo
 from dto.coverage_comparison_stats import CoverageComparisonStats
 from transcript_comparator import TranscriptComparator
-import pasio
-import logging
 
 def get_argparser():
     argparser = argparse.ArgumentParser(
@@ -24,17 +22,13 @@ def get_argparser():
 argparser = get_argparser()
 args = argparser.parse_args()
 
-logger = logging.getLogger('pasio')
-logger.setLevel(logging.WARNING)
-splitter = pasio.configure_splitter(alpha=1, beta=1, algorithm='rounds', window_size=2500, window_shift=1250, num_rounds=None, no_split_constant=True)
-
 segmentation_stream = Segmentation.each_in_file(args.segmentation, header=False)
 
 cds_info_by_transcript = CodingTranscriptInfo.load_transcript_cds_info(args.cds_annotation)
 control_coverages = TranscriptCoverage.each_in_file(args.coverage_control, header=False, dtype=int)
 experiment_coverages = TranscriptCoverage.each_in_file(args.coverage_experiment, header=False, dtype=int)
 
-comparator = TranscriptComparator(cds_info_by_transcript, splitter, drop_start_flank=15, drop_stop_flank=15)
-transcript_comparison_infos = comparator.compare_coverage_streams(control_coverages, experiment_coverages)
+comparator = TranscriptComparator(cds_info_by_transcript, drop_start_flank=15, drop_stop_flank=15)
+transcript_comparison_infos = comparator.compare_coverage_streams(segmentation_stream, control_coverages, experiment_coverages)
 transcript_comparison_infos = list(transcript_comparison_infos)
 CoverageComparisonStats.print(transcript_comparison_infos, extended=True)
