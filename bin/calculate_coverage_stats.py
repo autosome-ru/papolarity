@@ -13,10 +13,10 @@ def get_argparser():
         prog = "calculate_coverage_stats",
         description = "Coverage profile comparison",
     )
-    argparser.add_argument('cds_annotation', help='CDS annotation') # 'gencode.vM22.cds_features.tsv'
-    argparser.add_argument('segmentation', help = 'Segmentation')
-    argparser.add_argument('coverage_control', help='Coverage for control data')
-    argparser.add_argument('coverage_experiment', help='Coverage for experiment data')
+    argparser.add_argument('cds_annotation', metavar='cds_annotation.tsv', help='CDS annotation') # 'gencode.vM22.cds_features.tsv'
+    argparser.add_argument('segmentation', metavar='segmentation.bed', help='Segmentation')
+    argparser.add_argument('coverage_control', metavar='control.bedgraph', help='Coverage for control data')
+    argparser.add_argument('coverage_experiment', metavar='experiment.bedgraph', help='Coverage for experiment data')
     return argparser
 
 argparser = get_argparser()
