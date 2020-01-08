@@ -4,6 +4,7 @@ from os.path import dirname
 sys.path.insert(0, dirname(dirname(__file__)))
 import argparse
 import gzip
+import numpy as np
 from utils import align_iterators, pool_profiles, get_constant_intervals
 from dto.coverage_interval import CoverageInterval
 from dto.transcript_coverage import TranscriptCoverage
