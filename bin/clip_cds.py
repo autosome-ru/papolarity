@@ -6,14 +6,7 @@ import itertools
 from gzip_utils import open_for_write
 from dto.interval import Interval
 from dto.coding_transcript_info import CodingTranscriptInfo
-
-def customize_contig_name(contig_name, contig_naming_mode, window_start, window_stop):
-    if contig_naming_mode == 'original':
-        return contig_name
-    elif contig_naming_mode == 'window':
-        return f'{contig_name}:{window_start}-{window_stop}'
-    else:
-        raise ValueError(f'Unknown contig naming mode `{contig_naming_mode}`')
+import dataclasses
 
 def segments_clipped_to_window(segments, window_start, window_stop, contig_name):
     for segment in segments:
@@ -22,37 +15,49 @@ def segments_clipped_to_window(segments, window_start, window_stop, contig_name)
         if segment_stop - segment_start > 0:
             yield Interval(contig_name, segment_start, segment_stop, segment.rest)
 
-def segments_clipped_to_cds(segments, cds_info,
-                            contig_name, contig_naming_mode='original',
-                            drop_5_flank=0, drop_3_flank=0):
-    window_start = cds_info.cds_start + drop_5_flank
-    window_stop = cds_info.cds_stop - drop_3_flank
-    customized_contig_name = customize_contig_name(contig_name, contig_naming_mode, window_start, window_stop)
-    yield from segments_clipped_to_window(segments, window_start, window_stop, customized_contig_name)
+@dataclasses.dataclass
+class Clipper:
+    contig_naming_mode: str = 'window'
+    drop_5_flank: int = 0
+    drop_3_flank: int = 0
 
-def bedfile_clipped_to_cds(bed_stream, cds_info_by_transcript,
-                           contig_naming_mode='original',
-                           allow_non_matching=False,
-                           drop_5_flank=0, drop_3_flank=0):
-    '''
-    Attention! if `contig_naming_mode` is not "original" and `allow_non_matching` is True,
-    then contig names will be in inconsistent formats:
-    transcripts with have matching cds_info, will have customized contig names,
-    while transcripts without matching cds_info will have original contig names.
-    '''
-    for (contig_name, segments) in itertools.groupby(bed_stream, lambda segment: segment.chrom):
-        if contig_name in cds_info_by_transcript:
-            cds_info = cds_info_by_transcript[contig_name]
-            yield from segments_clipped_to_cds(segments, cds_info, contig_name, contig_naming_mode,
-                                               drop_5_flank=drop_5_flank, drop_3_flank=drop_3_flank)
+    def __post_init__(self):
+        if self.contig_naming_mode not in ['original', 'window']:
+            raise ValueError(f'Unknown contig naming mode `{self.contig_naming_mode}`')
+
+    def customize_contig_name(self, contig_name, window_start, window_stop):
+        if self.contig_naming_mode == 'original':
+            return contig_name
+        elif self.contig_naming_mode == 'window':
+            return f'{contig_name}:{window_start}-{window_stop}'
         else:
-            if allow_non_matching:
-                yield from segments
+            raise ValueError(f'Unknown contig naming mode `{self.contig_naming_mode}`')
+
+    def segments_clipped_to_cds(self, segments, cds_info, contig_name):
+        window_start = cds_info.cds_start + self.drop_5_flank
+        window_stop = cds_info.cds_stop - self.drop_3_flank
+        customized_contig_name = self.customize_contig_name(contig_name, window_start, window_stop)
+        yield from segments_clipped_to_window(segments, window_start, window_stop, customized_contig_name)
+
+    def bedfile_clipped_to_cds(self, bed_stream, cds_info_by_transcript, allow_non_matching=False):
+        '''
+        Attention! if `contig_naming_mode` is not "original" and `allow_non_matching` is True,
+        then contig names will be in inconsistent formats:
+        transcripts with have matching cds_info, will have customized contig names,
+        while transcripts without matching cds_info will have original contig names.
+        '''
+        for (contig_name, segments) in itertools.groupby(bed_stream, lambda segment: segment.chrom):
+            if contig_name in cds_info_by_transcript:
+                cds_info = cds_info_by_transcript[contig_name]
+                yield from self.segments_clipped_to_cds(segments, cds_info, contig_name)
+            else:
+                if allow_non_matching:
+                    yield from segments
 
 def get_argparser():
     argparser = argparse.ArgumentParser(
-        prog = "calculate_coverage_stats",
-        description = "Coverage profile comparison",
+        prog = "clip_cds",
+        description = "Clip any bed file in transcriptomic coordinates to CDS-region",
     )
     argparser.add_argument('cds_annotation', metavar='cds_annotation.tsv', help='CDS annotation') # 'gencode.vM22.cds_features.tsv'
     argparser.add_argument('bedfile', metavar='bedfile.bed', help = 'Coverage or segmentation file in bed format (3 standard columns + any number of non-standard)')
@@ -75,9 +80,9 @@ if (args.allow_non_matching) and (args.contig_naming_mode != 'original'):
 
 cds_info_by_transcript = CodingTranscriptInfo.load_transcript_cds_info(args.cds_annotation)
 bed_stream = Interval.each_in_file(args.bedfile)
+clipper = Clipper(contig_naming_mode=args.contig_naming_mode,
+                  drop_5_flank=args.drop_5_flank,
+                  drop_3_flank=args.drop_3_flank)
 with open_for_write(args.output_file) as output_stream:
-    for interval in bedfile_clipped_to_cds(bed_stream, cds_info_by_transcript,
-                                           contig_naming_mode=args.contig_naming_mode,
-                                           allow_non_matching=args.allow_non_matching,
-                                           drop_5_flank=args.drop_5_flank, drop_3_flank=args.drop_3_flank):
+    for interval in clipper.bedfile_clipped_to_cds(bed_stream, cds_info_by_transcript, allow_non_matching=args.allow_non_matching):
         print(interval, file=output_stream)
