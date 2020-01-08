@@ -19,3 +19,14 @@ class Interval(DataclassTsvSerializable):
             raise TypeError(f'Interval stop should be integer but was `{self.stop}`')
         if self.start >= self.stop:
             raise ValueError(f'Interval start={self.start} should be less than stop={self.stop}')
+
+    @classmethod
+    def from_string(cls, line, **kwargs):
+        row = line.rstrip('\n').split('\t')
+        chrom, start, stop, *rest = row
+        attrs = {'chrom': chrom, 'start': int(start), 'stop': int(stop), 'rest': rest}
+        return cls(**attrs, **kwargs)
+
+    def tsv_string(self):
+        fields = [self.chrom, self.start, self.stop, *self.rest]
+        return '\t'.join(map(str, fields))
