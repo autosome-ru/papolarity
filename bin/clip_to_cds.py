@@ -56,8 +56,12 @@ def get_argparser():
     )
     argparser.add_argument('cds_annotation', metavar='cds_annotation.tsv', help='CDS annotation') # 'gencode.vM22.cds_features.tsv'
     argparser.add_argument('bedfile', metavar='bedfile.bed', help = 'Coverage or segmentation file in bed format (3 standard columns + any number of non-standard)')
+
+    # start and stop codon can have piles of reads, so we usually want to drop them
+    # flank lengths to drop are of 15nt ~= half-ribosome (~half of riboseq footprint length)
     argparser.add_argument('--drop-5-flank', metavar='N', type=int, default=0, help="Clip N additional nucleotides from transcript start (5'-end)")
     argparser.add_argument('--drop-3-flank', metavar='N', type=int, default=0, help="Clip N additional nucleotides from transcript end (3'-end)")
+
     argparser.add_argument('--output-file', '-o', dest='output_file', help="Store results at this path")
     argparser.add_argument('--allow-non-matching', action='store_true', help="Allow transcripts which are not present in CDS-annotation (they are not clipped)")
     argparser.add_argument('--contig-naming', dest='contig_naming_mode', choices=['original', 'window'], default='window', help="Use original (chr1) or modified (chr1:23-45) contig name for resulting intervals")
