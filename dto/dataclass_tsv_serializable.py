@@ -1,5 +1,6 @@
 import sys
 import dataclasses
+from utils import flatten
 from gzip_utils import open_for_read, open_for_write
 
 @dataclasses.dataclass
@@ -14,7 +15,7 @@ class DataclassTsvSerializable:
 
     def tsv_string(self):
         fields = [getattr(self, field.name) for field in dataclasses.fields(self)]
-        return '\t'.join(map(str, fields))
+        return '\t'.join(map(str, flatten(fields)))
 
     @classmethod
     def from_string(cls, line, **kwargs):

@@ -1,3 +1,12 @@
+def flatten(xs):
+    result = []
+    for x in xs:
+        if isinstance(x, list):
+            result.extend(flatten(x))
+        else:
+            result.append(x)
+    return result
+
 def take_the_only(arr):
     if len(arr) > 1:
         raise Exception('Several elements when the only one is expected')
@@ -61,7 +70,6 @@ def _next_unless_exhausted(iterator, key, exhausted, object_missing=None):
         return (object_missing, _sentinel_key, True)
 
 import numpy as np
-from dto.coverage_interval import CoverageInterval
 
 def pool_profiles(profiles):
     return np.sum(profiles, axis=0)
