@@ -3,6 +3,7 @@
 from collections import namedtuple
 import gzip
 import json
+from .gzip_utils import open_for_read
 
 _gff_info_fields = ["contig", "source", "type", "start", "stop", "score", "strand", "phase", "attributes"]
 class GTFRecord(namedtuple("GTFRecord", _gff_info_fields)):
