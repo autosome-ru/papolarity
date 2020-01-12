@@ -1,3 +1,5 @@
+import numpy as np
+
 def flatten(xs):
     result = []
     for x in xs:
@@ -68,8 +70,6 @@ def _next_unless_exhausted(iterator, key, exhausted, object_missing=None):
             return (object_missing, _sentinel_key, True)
     else:
         return (object_missing, _sentinel_key, True)
-
-import numpy as np
 
 def pool_profiles(profiles):
     return np.sum(profiles, axis=0)
