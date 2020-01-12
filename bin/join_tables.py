@@ -40,14 +40,14 @@ if len(args.supplementary_filenames) != len(supplementary_columns):
 
 supplementary_tables = []
 for (table_filename, column) in zip(args.supplementary_filenames, supplementary_columns):
-    table_stream = stream_table_column_highlighted(table_filename, column, has_header=args.has_header, pop_column=True)
+    table_stream = stream_table_column_highlighted(table_filename, [column], has_header=args.has_header, pop_column=True)
     if args.has_header:
         _, header = next(table_stream)
     mapping = dict(table_stream)
     supplementary_tables.append({'header': header, 'mapping': mapping, 'padding': [''] * len(header)})
 
 with open_for_write(args.output_file) as output_stream:
-    table_stream = stream_table_column_highlighted(args.reference_filename, args.reference_column, has_header=args.has_header, pop_column=False)
+    table_stream = stream_table_column_highlighted(args.reference_filename, [args.reference_column], has_header=args.has_header, pop_column=False)
     if args.has_header:
         _, reference_header = next(table_stream)
         header = reference_header + flatten(tbl['header'] for tbl in supplementary_tables)
