@@ -1,6 +1,6 @@
 import sys
 import dataclasses
-from gzip_utils import open_for_read, open_for_write
+from ..gzip_utils import open_for_read, open_for_write
 
 @dataclasses.dataclass
 class DataclassTsvSerializable:

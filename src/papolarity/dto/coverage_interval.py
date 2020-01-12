@@ -1,7 +1,7 @@
 import dataclasses
-from dto.dataclass_tsv_serializable import DataclassTsvSerializable
 from typing import Union
 from decimal import Decimal
+from .dataclass_tsv_serializable import DataclassTsvSerializable
 
 @dataclasses.dataclass
 class CoverageInterval(DataclassTsvSerializable):

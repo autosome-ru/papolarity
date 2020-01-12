@@ -1,7 +1,7 @@
 import dataclasses
 import itertools
 import numpy as np
-from dto.coverage_interval import CoverageInterval
+from .coverage_interval import CoverageInterval
 
 @dataclasses.dataclass
 class TranscriptCoverage:

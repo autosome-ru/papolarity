@@ -1,6 +1,6 @@
 import dataclasses
-from dto.dataclass_tsv_serializable import DataclassTsvSerializable
 from typing import List, Any
+from .dataclass_tsv_serializable import DataclassTsvSerializable
 
 @dataclasses.dataclass(order=True)
 class Interval(DataclassTsvSerializable):

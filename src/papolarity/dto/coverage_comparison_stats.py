@@ -1,11 +1,11 @@
-from dto.coding_transcript_info import CodingTranscriptInfo
 import sys
-from polarity_score import polarity_score
-from profile_comparison import profile_difference, slope_by_profiles
-import numpy as np
-from itertools import groupby
 import dataclasses
-from dto.dataclass_tsv_serializable import DataclassTsvSerializable
+from itertools import groupby
+import numpy as np
+from .dataclass_tsv_serializable import DataclassTsvSerializable
+from .coding_transcript_info import CodingTranscriptInfo
+from ..polarity_score import polarity_score
+from ..profile_comparison import profile_difference, slope_by_profiles
 
 @dataclasses.dataclass(frozen=True)
 class CoverageComparisonStats(DataclassTsvSerializable):

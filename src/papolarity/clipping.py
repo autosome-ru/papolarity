@@ -1,6 +1,6 @@
 import dataclasses
 from itertools import groupby
-from dto.interval import Interval
+from .dto.interval import Interval
 
 def segments_clipped_to_window(segments, window_start, window_stop, contig_name):
     for segment in segments:

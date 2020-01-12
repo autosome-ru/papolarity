@@ -42,7 +42,7 @@ setuptools.setup(
     },
     entry_points={
         'console_scripts': [
-            # 'pasio=pasio.cli:main',
+            'papolarity=papolarity.cli:main',
         ],
     },
     use_scm_version=False,

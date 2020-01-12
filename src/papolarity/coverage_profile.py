@@ -1,9 +1,9 @@
 from decimal import Decimal
 import itertools
 import numpy as np
-import coreutils_sort
-from dto.transcript_coverage import TranscriptCoverage
-from dto.coverage_interval import CoverageInterval
+from . import coreutils_sort
+from .dto.transcript_coverage import TranscriptCoverage
+from .dto.coverage_interval import CoverageInterval
 
 def transcript_coverages_from_alignment(alignment, sort_transcripts=False, dtype=float):
     bedgraph = make_coverage(alignment, sort_transcripts=sort_transcripts, dtype=dtype)

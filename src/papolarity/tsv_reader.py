@@ -1,4 +1,4 @@
-from gzip_utils import open_for_read
+from .gzip_utils import open_for_read
 
 def stream_table_column_highlighted(filename, columns, has_header, pop_column=True):
     with open_for_read(filename) as file:

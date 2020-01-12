@@ -1,10 +1,10 @@
-from utils import pool_profiles
 import itertools
-import pasio
-import numpy as np
 import dataclasses
-from dto.interval import Interval
 from typing import List
+import numpy as np
+import pasio
+from .utils import pool_profiles
+from .dto.interval import Interval
 
 def make_joint_segmentation(coverages, splitter):
     pooled_coverage = pool_profiles(coverages)

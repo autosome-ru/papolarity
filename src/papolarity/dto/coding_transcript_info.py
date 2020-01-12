@@ -1,5 +1,5 @@
-from dto.dataclass_tsv_serializable import DataclassTsvSerializable
 import dataclasses
+from .dataclass_tsv_serializable import DataclassTsvSerializable
 
 # cds_start and cds_stop are 0-based related to transcript
 @dataclasses.dataclass(frozen=True)

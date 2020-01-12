@@ -1,11 +1,10 @@
 from collections import defaultdict
-from collections import namedtuple
-from gtf_parser import GTFRecord
-from utils import take_the_only
-from fasta_reader import fasta_from_file
-from dto.coding_transcript_info import CodingTranscriptInfo
 import itertools
 import pybedtools
+from .gtf_parser import GTFRecord
+from .utils import take_the_only
+from .fasta_reader import fasta_from_file
+from .dto.coding_transcript_info import CodingTranscriptInfo
 
 class Annotation:
     def __init__(self):
