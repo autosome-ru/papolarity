@@ -1,9 +1,11 @@
+.eggs/
+.venv/
+build/
+dist/
+src/papolarity.egg-info/
 *.bedgraph
 *.bedGraph
-*.bedgraph.gz
-*.bedGraph.gz
-*.tsv.gz
-*.tar.gz
+*.gz
 *.pyc
 *.png
 *.txt
