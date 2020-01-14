@@ -4,23 +4,26 @@ from ..gzip_utils import open_for_read, open_for_write
 
 @dataclasses.dataclass
 class DataclassTsvSerializable:
+    # Additional columns (goes after normal ones) which are to be printed/stored but not loaded'''
+    computable_properties = [] # [('column_name', 'property_name'), ...]
+
     @classmethod
     def header(cls):
-        fields = [field.name for field in dataclasses.fields(cls)]
+        fields = [field.name for field in dataclasses.fields(cls)] + [name for (name, prop) in cls.computable_properties]
         return '\t'.join(fields)
 
     def __str__(self):
         return self.tsv_string()
 
     def tsv_string(self):
-        fields = [getattr(self, field.name) for field in dataclasses.fields(self)]
+        fields = [getattr(self, field.name) for field in dataclasses.fields(self)] + [getattr(self, prop) for (name, prop) in self.computable_properties]
         return '\t'.join(map(str, fields))
 
     @classmethod
     def from_string(cls, line, **kwargs):
         row = line.rstrip('\n').split('\t')
         attrs = {}
-        for field, value in zip(dataclasses.fields(cls), row):
+        for field, value in zip(dataclasses.fields(cls), row): # skips computable (and other auxiliary) properties
             if field.metadata.get('skip_conversion', False):
                 attrs[field.name] = value
             else:

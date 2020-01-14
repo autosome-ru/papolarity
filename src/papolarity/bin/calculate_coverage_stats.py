@@ -44,4 +44,4 @@ def invoke(args):
     experiment_coverages = TranscriptCoverage.each_in_file(args.coverage_experiment, header=False, dtype=int)
 
     transcript_comparison_infos = compare_coverage_streams(segmentation_stream, control_coverages, experiment_coverages)
-    CoverageComparisonStats.print(transcript_comparison_infos, extended=True)
+    CoverageComparisonStats.print_tsv(transcript_comparison_infos, header=True)

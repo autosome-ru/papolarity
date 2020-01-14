@@ -1,4 +1,3 @@
-import sys
 import dataclasses
 import numpy as np
 from .dataclass_tsv_serializable import DataclassTsvSerializable
@@ -16,6 +15,8 @@ class CoverageComparisonStats(DataclassTsvSerializable):
     multipoint_slope: float
     profile_difference: float
 
+    computable_properties = [('geom_mean_coverage','geom_mean_coverage'), ]
+
     @classmethod
     def make_from_profiles(cls, transcript_id, cds_profile_control, cds_profile_experiment, segmentation):
         info = {
@@ -28,17 +29,6 @@ class CoverageComparisonStats(DataclassTsvSerializable):
             'profile_difference': profile_difference(cds_profile_control, cds_profile_experiment, segmentation),
         }
         return cls(**info)
-
-    @classmethod
-    def print(cls, infos, file=sys.stdout, extended=False):
-        if extended:
-            print('\t'.join([cls.header(), 'geom_mean_coverage']), file=file)
-            for info in infos:
-                print('\t'.join(map(str, [info, info.geom_mean_coverage,])), file=file)
-        else:
-            print(cls.header(), file=file)
-            for info in infos:
-                print(info, file=file)
 
     @property
     def geom_mean_coverage(self):
