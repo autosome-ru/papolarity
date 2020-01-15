@@ -2,7 +2,7 @@ import dataclasses
 from typing import List, Any
 from .dataclass_tsv_serializable import DataclassTsvSerializable
 
-@dataclasses.dataclass(order=True)
+@dataclasses.dataclass(order=True, frozen=True)
 class Interval(DataclassTsvSerializable):
     '''bed-coordinates [a, b)'''
     chrom: str
@@ -30,3 +30,7 @@ class Interval(DataclassTsvSerializable):
     def tsv_string(self):
         fields = [self.chrom, self.start, self.stop, *self.rest]
         return '\t'.join(map(str, fields))
+
+    @property
+    def length(self):
+        return self.stop - self.start
