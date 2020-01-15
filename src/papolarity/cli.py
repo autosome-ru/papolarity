@@ -2,7 +2,7 @@ import argparse
 from .version import __version__
 from .bin import get_coverage, pool_coverages, extract_cds_annotation, clip_cds, \
                  coverage_properties, join_tables, choose_best, \
-                 calculate_coverage_stats, plot_slope_distributions, \
+                 compare_coverages, plot_slope_distributions, \
                  shrinkage, plot_slope_distributions, \
                  flatten_coverage
 
@@ -20,7 +20,7 @@ def configure_argparser(argparser=None):
         {'cmd': 'coverage_properties', 'namespace': coverage_properties, 'help': 'Calculate coverage profile properties'},
         {'cmd': 'join_tables', 'namespace': join_tables, 'help': 'Join the second table to the first one'},
         {'cmd': 'choose_best', 'namespace': choose_best, 'help': 'Choose best element from each group (e.g. best transcipt for each gene)'},
-        {'cmd': 'calculate_coverage_stats', 'namespace': calculate_coverage_stats, 'help': 'Coverage profile comparison'},
+        {'cmd': 'compare_coverages', 'namespace': compare_coverages, 'help': 'Coverage profile comparison'},
         {'cmd': 'plot_slope_distributions', 'namespace': plot_slope_distributions, 'help': 'Plot distributions of polarities and slopes over genes'},
         {'cmd': 'shrinkage', 'namespace': shrinkage, 'help': 'Make length-dependend shrinkage of slope properties'},
         {'cmd': 'flatten_coverage', 'namespace': flatten_coverage, 'help': 'Flatten coverage profiles by averaging data through given segments'},

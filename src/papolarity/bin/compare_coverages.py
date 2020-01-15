@@ -25,7 +25,7 @@ def compare_coverage_streams(segmentations, control_coverages, experiment_covera
 def configure_argparser(argparser=None):
     if not argparser:
         argparser = argparse.ArgumentParser(
-            prog = "calculate_coverage_stats",
+            prog = "compare_coverages",
             description = "Coverage profile comparison",
         )
     argparser.add_argument('segmentation', metavar='segmentation.bed', help='Segmentation')
