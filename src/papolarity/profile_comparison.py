@@ -5,31 +5,49 @@ from math import log
 from collections import namedtuple
 WeigthedPoints = namedtuple('WeigthedPoints', ['xs', 'ys', 'weights'])
 
-def slope_by_profiles(control_profile, experiment_profile, segmentation):
-    cumsum_coverage_control = np.hstack([0, np.cumsum(control_profile)])
-    cumsum_coverage_experiment = np.hstack([0, np.cumsum(experiment_profile)])
-    total_coverage_control = cumsum_coverage_control[-1]
-    total_coverage_experiment = cumsum_coverage_experiment[-1]
-    assert len(control_profile) == len(experiment_profile)
-    assert len(control_profile) == segmentation.segmentation_length
-    profile_len = len(control_profile)
+def segmentation_stops(segmentation):
+    stops = [s.start for s in segmentation.segments]
+    stops.append(segmentation.segments[-1].stop)
+    return stops
+
+def segmentwise_sums(segmentation, profile):
+    profile_cumsum = np.hstack([0, np.cumsum(profile)])
+    return np.diff(profile_cumsum[segmentation_stops(segmentation)])
+
+    control_sums = segmentwise_sums(segmentation, control_profile)
+    experiment_sums = segmentwise_sums(segmentation, experiment_profile)
+
+
+def slope_by_profiles(control_profile, experiment_profile, segmentation, log_mode=False):
+    control_sums = segmentwise_sums(segmentation, control_profile)
+    experiment_sums = segmentwise_sums(segmentation, experiment_profile)
+    return slope_by_segment_counts(control_sums, experiment_sums, segmentation, log_mode=log_mode)
+
+def slope_by_segment_counts(control_sums, experiment_sums, segmentation, log_mode=False):
+    total_coverage_control = np.sum(control_sums)
+    total_coverage_experiment = np.sum(experiment_sums)
+
+    assert len(segmentation.segments) == len(control_sums) == len(experiment_sums)
+    profile_len = segmentation.segmentation_length
 
     center_info = WeigthedPoints([], [], [])
     weighted_center_info = WeigthedPoints([], [], [])
     every_point_info = WeigthedPoints([], [], [])
 
     num_segments = segmentation.num_segments
-    for segment in segmentation.segments:
-        start = segment.start
-        stop = segment.stop
-        mean_control = (cumsum_coverage_control[stop] - cumsum_coverage_control[start]) / (stop - start)
-        mean_experiment = (cumsum_coverage_experiment[stop] - cumsum_coverage_experiment[start]) / (stop - start)
+    if log_mode:
+        rate_transform = log
+    else:
+        rate_transform = lambda x: x
+    for (segment, control_segment_sum, experiment_segment_sum) in zip(segmentation.segments, control_sums, experiment_sums):
+        mean_control = control_segment_sum / segment.length
+        mean_experiment = experiment_segment_sum / segment.length
         normalized_mean_control = (mean_control + 1) / (total_coverage_control + num_segments)
         normalized_mean_experiment = (mean_experiment + 1) / (total_coverage_experiment + num_segments)
         detrended_profile = normalized_mean_experiment / normalized_mean_control
-        value = log(detrended_profile)
+        value = rate_transform(detrended_profile)
 
-        coord = (start + stop - 1) / 2
+        coord = (segment.start + segment.stop - 1) / 2
         rel_coord = coord / profile_len
 
         # mode: 'center'
@@ -38,13 +56,13 @@ def slope_by_profiles(control_profile, experiment_profile, segmentation):
         center_info.weights.append(1)
 
         # mode: 'weighted_center'
-        weight = stop - start
+        weight = segment.stop - segment.start
         weighted_center_info.xs.append(rel_coord)
         weighted_center_info.ys.append(value)
         weighted_center_info.weights.append(weight)
 
         # mode: 'every_point'
-        for pos in range(start, stop):
+        for pos in range(segment.start, segment.stop):
             rel_pos = pos / profile_len
             every_point_info.xs.append(rel_pos)
             every_point_info.ys.append(value)
@@ -63,20 +81,19 @@ def slope_by_points(xs, ys, weights):
     return model.coef_[0]
 
 def profile_difference(control_profile, experiment_profile, segmentation):
-    assert len(control_profile) == len(experiment_profile)
+    control_sums = segmentwise_sums(segmentation, control_profile)
+    experiment_sums = segmentwise_sums(segmentation, experiment_profile)
+    return profile_difference(control_sums, experiment_sums, segmentation, log_mode=log_mode)
 
-    cumsum_coverage_control = np.hstack([0, np.cumsum(control_profile)])
-    cumsum_coverage_experiment = np.hstack([0, np.cumsum(experiment_profile)])
-    control_profile_sum = cumsum_coverage_control[-1]
-    experiment_profile_sum = cumsum_coverage_experiment[-1]
+def profile_difference_by_segment_counts(control_sums, experiment_sums, segmentation):
+    assert len(control_sums) == len(experiment_sums) == len(segmentation.segments)
 
-    cumsum_coverage_control_normed = cumsum_coverage_control / control_profile_sum  if control_profile_sum != 0  else cumsum_coverage_control
-    cumsum_coverage_experiment_normed = cumsum_coverage_experiment / experiment_profile_sum  if experiment_profile_sum != 0  else cumsum_coverage_experiment
+    control_profile_sum = np.sum(control_sums)
+    experiment_profile_sum = np.sum(experiment_sums)
+
+    control_normed = control_sums / control_profile_sum  if control_profile_sum != 0  else control_sums
+    experiment_normed = experiment_sums / experiment_profile_sum  if experiment_profile_sum != 0  else experiment_sums
     difference = 0
-    for segment in segmentation.segments:
-        start = segment.start
-        stop = segment.stop
-        control_segment = cumsum_coverage_control_normed[stop] - cumsum_coverage_control_normed[start]
-        experiment_segment = cumsum_coverage_experiment_normed[stop] - cumsum_coverage_experiment_normed[start]
-        difference += abs(control_segment - experiment_segment)
-    return difference / len(control_profile)
+    for (segment, control_segment_sum, experiment_segment_sum) in zip(segmentation.segments, control_normed, experiment_normed):
+        difference += abs(control_segment_sum - experiment_segment_sum)
+    return difference / segmentation.segmentation_length
