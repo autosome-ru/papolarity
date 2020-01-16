@@ -22,7 +22,7 @@ def standardize_mean(val, val_mean, val_stddev):
 # mean --> 0
 # stddev --> 1
 # (aka z-score)
-def standardize_mean_stddev(val, val_mean, val_stddev):
+def standardize_zscore(val, val_mean, val_stddev):
     return (val - val_mean) / val_stddev
 
 def configure_argparser(argparser=None):
@@ -33,7 +33,7 @@ def configure_argparser(argparser=None):
     argparser.add_argument('--fields', nargs='*', dest='fields_to_correct', default=[], help='List of fields to correct')
     argparser.add_argument('--prefix', default='shrinked_', help='Prefix for corrected column name')
     argparser.add_argument('--window', metavar='SIZE', dest='window_size', type=int, default=100, help='Size of sliding window (default: %(default)s)')
-    argparser.add_argument('--mode', default='zero_mean+unit_stddev', help='Which statistics to standardize (options: zero_mean, unit_stddev, zero_mean+unit_stddev)')
+    argparser.add_argument('--mode', choices=['zero_mean', 'unit_stddev', 'z-score'], default='z-score', help='How to standardize statistics (default: %(default)s)')
     argparser.add_argument('--output-file', '-o', dest='output_file', help="Store results at this path")
     return argparser
 
@@ -45,12 +45,12 @@ def main():
 def invoke(args):
     if args.mode == 'zero_mean':
         standardization = standardize_mean
-    elif args.mode in ['unit_stddev', 'unit_stdev', 'unit_std']:
+    elif args.mode == 'unit_stddev':
         standardization = standardize_stddev
-    elif args.mode in ['zero_mean+unit_stddev', 'zero_mean+unit_stdev', 'zero_mean+unit_std']:
-        standardization = standardize_mean_stddev
+    elif args.mode == 'z-score':
+        standardization = standardize_zscore
     else:
-        raise ValueError(f'Unknown mode `{mode}`')
+        raise ValueError(f'Unknown mode `{args.mode}`')
 
     dtype = float
     data = list(each_in_tsv(args.table))
