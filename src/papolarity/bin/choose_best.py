@@ -20,7 +20,6 @@ def configure_argparser(argparser=None):
     header_group.add_argument('--no-header', action='store_false', dest='has_header', help="Tables doesn't have header")
 
     argparser.add_argument('--output-file', '-o', dest='output_file', help="Store results at this path")
-    argparser.add_argument('--dtype', choices=['int', 'float'], default='float', help="Treat values as int or float (default: float)")
     return argparser
 
 def main():
@@ -29,12 +28,7 @@ def main():
     invoke(args)
 
 def invoke(args):
-    if args.dtype == 'int':
-        dtype = int
-    elif args.dtype == 'float':
-        dtype = float
-    else:
-        raise ValueError('dtype should be either int or float')
+    dtype = float
 
     get_group = lambda row: row[0][0]
     get_value = lambda row: dtype(row[0][1])
