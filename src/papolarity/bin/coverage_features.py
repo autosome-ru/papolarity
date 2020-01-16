@@ -20,7 +20,7 @@ def main():
 def invoke(args):
     coverages = TranscriptCoverage.each_in_file(args.coverage, header=False, dtype=int)
     with open_for_write(args.output_file) as output_stream:
-        property_names = ['transcript_length', 'mean_coverage', 'total_coverage', 'polarity']
+        property_names = ['mean_coverage', 'total_coverage', 'polarity']
         prefixed_property_names = [f'{args.prefix}{name}' for name in property_names]
         header = ['transcript_id', *prefixed_property_names]
         print('\t'.join(header), file=output_stream)
@@ -28,10 +28,9 @@ def invoke(args):
             coverage = transcript_coverage.coverage
 
             transcript_id = transcript_coverage.transcript_id
-            transcript_length = len(coverage)
             mean_coverage = np.mean(coverage)
             total_coverage = np.sum(coverage)
             polarity = polarity_score(coverage)
 
-            info = [transcript_id, transcript_length, mean_coverage, total_coverage, polarity]
+            info = [transcript_id, mean_coverage, total_coverage, polarity]
             print('\t'.join(map(str, info)), file=output_stream)
