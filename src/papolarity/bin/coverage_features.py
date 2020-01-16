@@ -6,7 +6,7 @@ from ..polarity_score import polarity_score
 
 def configure_argparser(argparser=None):
     if not argparser:
-        argparser = argparse.ArgumentParser(prog="coverage_properties", description="Calculate coverage profile properties")
+        argparser = argparse.ArgumentParser(prog="coverage_features", description="Calculate coverage profile features")
     argparser.add_argument('coverage', metavar='coverage.bedgraph', help='Coverage data')
     argparser.add_argument('--prefix', default='', help='Prefix of property columns (to distinguish control and experiment)')
     argparser.add_argument('--output-file', '-o', dest='output_file', help="Store results at this path")
