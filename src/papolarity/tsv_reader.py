@@ -1,3 +1,4 @@
+import csv
 from .gzip_utils import open_for_read
 
 def stream_table_column_highlighted(filename, columns, has_header, pop_column=True):
@@ -24,3 +25,9 @@ def stream_table_column_highlighted(filename, columns, has_header, pop_column=Tr
                 for column_idx in column_indices:
                     row.pop(column_idx)
             yield (key, row)
+
+def each_in_tsv(filename):
+    with open_for_read(filename) as input_stream:
+        reader = csv.DictReader(input_stream, delimiter='\t')
+        for row in reader:
+            yield row

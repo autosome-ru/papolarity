@@ -1,25 +1,24 @@
 import argparse
 import numpy as np
-from ..dto.coverage_comparison_stats import CoverageComparisonStats
 from ..gzip_utils import open_for_write
+from ..tsv_reader import each_in_tsv
 
-def sliding_window(arr, size):
-    try:
-        window = []
-        iterator = iter(arr)
-        for _ in range(size):
-            window.append(next(iterator))
-        while True:
-            yield window[:]
-            window.pop(0)
-            window.append( next(iterator) )
-    except StopIteration:
-        pass
+def sliding_row_with_window(arr, size):
+    for idx in range(0, size // 2):
+        yield (arr[idx], arr[0:size])
+    for idx in range(size // 2, len(arr) - size // 2):
+        yield (arr[idx], arr[(idx - size // 2):(idx - size // 2 + size)])
+    for idx in range(len(arr) - size // 2, len(arr)):
+        yield (arr[idx], arr[-size:])
 
 def configure_argparser(argparser=None):
     if not argparser:
         argparser = argparse.ArgumentParser(prog="shrinkage", description = "Make length-dependend shrinkage of slope properties")
-    argparser.add_argument('coverage_properties', metavar='coverage_properties.tsv', help='Genomic annotation in GTF-format')
+    argparser.add_argument('table', metavar='table.tsv', help='Table in tab-separated format')
+    argparser.add_argument('sorting_field', help='Field to sort a table')
+    argparser.add_argument('--fields', nargs='*', dest='fields_to_correct', default=[], help='List of fields to correct')
+    argparser.add_argument('--prefix', default='shrinked_', help='Prefix for corrected column name')
+    argparser.add_argument('--window', metavar='SIZE', dest='window_size', type=int, default=100, help='Size of sliding window (default: %(default)s)')
     argparser.add_argument('--output-file', '-o', dest='output_file', help="Store results at this path")
     return argparser
 
@@ -29,21 +28,24 @@ def main():
     invoke(args)
 
 def invoke(args):
-    slope_data = list(CoverageComparisonStats.each_in_file(args.coverage_properties))
-    slope_data = [info for info in slope_data  if info.geom_mean_coverage() >= 10]
-    slope_data = list(CoverageComparisonStats.choose_best_transcript(slope_data))
+    dtype = float
+    data = list(each_in_tsv(args.table))
 
-    sorted_slopes = sorted(slope_data, key=lambda info: info.cds_stop - info.cds_start)
+    fields = list(data[0].keys())
+    for field in args.fields_to_correct:
+        fields.append(f'{args.prefix}{field}')
 
-    header = ['length_mean', 'slope_mean', 'slope_median', 'slope_q90', 'slope_max', 'slope_stddev']
+    for field in [args.sorting_field, *args.fields_to_correct]:
+        for row in data:
+            row[field] = dtype(row[field])
+
+    data.sort(key=lambda info: info[args.sorting_field])
+
     with open_for_write(args.output_file) as output_stream:
-        print('\t'.join(header), file=output_stream)
-        for slopes_in_window in sliding_window(sorted_slopes, 500):
-            length_mean  = np.mean([info.cds_stop - info.cds_start for info in slopes_in_window])
-            slope_mean   = np.mean([info.slope for info in slopes_in_window])
-            slope_median   = np.median([info.slope for info in slopes_in_window])
-            slope_q90   = np.quantile([info.slope for info in slopes_in_window], 0.9)
-            slope_max   = np.max([info.slope for info in slopes_in_window])
-            slope_stddev = np.std([info.slope for info in slopes_in_window])
-            output_info = [length_mean, slope_mean, slope_median, slope_q90, slope_max, slope_stddev]
-            print('\t'.join([str(round(x, 3)) for x in output_info]), file=output_stream)
+        print('\t'.join(fields), file=output_stream)
+        for row, window in sliding_row_with_window(data, args.window_size):
+            modified_row = dict(row)
+            for field in args.fields_to_correct:
+                field_vals = [window_row[field] for window_row in window]
+                modified_row[f'{args.prefix}{field}'] = row[field] / np.mean(field_vals)
+            print('\t'.join([str(modified_row[field]) for field in fields]), file=output_stream)
