@@ -7,7 +7,7 @@ def configure_argparser(argparser=None):
     if not argparser:
         argparser = argparse.ArgumentParser(prog="plot_distribution", description="Plot distributions of a property or several properties")
     argparser.add_argument('table', metavar='table.tsv', help='Table in tab-separated format')
-    argparser.add_argument('fields', nargs='*', help='Fields to plot on the same figure')
+    argparser.add_argument('--fields', nargs='*', required=True, help='Fields to plot on the same figure')
     argparser.add_argument('--labels', nargs='*', help='Set legend labels (by default field names are used)')
     argparser.add_argument('--title', help="Add plot title")
     argparser.add_argument('--xlim', nargs=2, type=float, help="Add limits for X-axis (in form `--xlim min max`)")
@@ -32,6 +32,9 @@ def invoke(args):
     data = list(each_in_tsv(args.table))
 
     fields = args.fields
+
+    if len(fields) == 0:
+        raise ValueError(f'Specify at least one field to plot')
 
     if args.labels:
         if len(fields) != len(args.labels):
