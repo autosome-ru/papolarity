@@ -43,9 +43,6 @@ def main():
     invoke(args)
 
 def invoke(args):
-    dtype = float
-    data = list(each_in_tsv(args.table))
-
     if args.mode == 'zero_mean':
         standardization = standardize_mean
     elif args.mode in ['unit_stddev', 'unit_stdev', 'unit_std']:
@@ -55,21 +52,24 @@ def invoke(args):
     else:
         raise ValueError(f'Unknown mode `{mode}`')
 
-    fields = list(data[0].keys())
-    for field in args.fields_to_correct:
-        fields.append(f'{args.prefix}{field}')
+    dtype = float
+    data = list(each_in_tsv(args.table))
 
+    fields = list(data[0].keys())
     for field in [args.sorting_field, *args.fields_to_correct]:
         for row in data:
             row[field] = dtype(row[field])
-
     data.sort(key=lambda info: info[args.sorting_field])
 
+    output_fields = fields[:]
+    for field in args.fields_to_correct:
+        output_fields.append(f'{args.prefix}{field}')
+
     with open_for_write(args.output_file) as output_stream:
-        print('\t'.join(fields), file=output_stream)
+        print('\t'.join(output_fields), file=output_stream)
         for row, window in sliding_row_with_window(data, args.window_size):
             modified_row = dict(row)
             for field in args.fields_to_correct:
                 field_vals = [window_row[field] for window_row in window]
                 modified_row[f'{args.prefix}{field}'] = standardization(row[field], val_mean=np.mean(field_vals), val_stddev=np.std(field_vals))
-            print('\t'.join([str(modified_row[field]) for field in fields]), file=output_stream)
+            print('\t'.join([str(modified_row[field]) for field in output_fields]), file=output_stream)
