@@ -52,10 +52,11 @@ def invoke(args):
         header = ['transcript_id', *prefixed_feature_names]
         print('\t'.join(header), file=output_stream)
         for rec in compare_coverage_streams(segmentation_stream, control_coverages, experiment_coverages):
-            row = [
+            info = [
                 rec.transcript_id,
                 rec.slope, rec.weighted_slope, rec.multipoint_slope,
                 rec.logslope, rec.weighted_logslope, rec.multipoint_logslope,
                 rec.profile_difference,
             ]
+            print('\t'.join(map(str, info)), file=output_stream)
             print('\t'.join(row), file=output_stream)
