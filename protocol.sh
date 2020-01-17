@@ -140,17 +140,17 @@ done
 
 # 3.2.6. Plot polarity score distribution for all samples on a single figure
 
-SAMPLE_FILES=$( echo $SAMPLE_BNS | xargs -n1 echo | xargs -n1 -I{} echo 'coverage_features/filtered/{}.tsv' | tr '\n' ' ' )
+SAMPLE_FILES=$( echo $SAMPLE_BNS | xargs -n1 echo | xargs -n1 -I{} echo 'coverage_features/adjusted/{}.tsv' | tr '\n' ' ' )
 
 csvtk --tabs join \
     ./transcripts_list.tsv \
     $SAMPLE_FILES \
-    --out-file coverage_features/filtered/all.tsv;
+    --out-file coverage_features/adjusted/all.tsv;
 
 SAMPLE_FIELDS=$( echo $SAMPLE_BNS | xargs -n1 echo | xargs -n1 -I{} echo '{}_polarity' | tr '\n' ' ' );
 
 papolarity plot_distribution \
-    "coverage_features/filtered/all.tsv" \
+    "coverage_features/adjusted/all.tsv" \
     --fields $SAMPLE_FIELDS \
     --legend \
     --title "Polarity distributions" \
@@ -159,3 +159,105 @@ papolarity plot_distribution \
     --output-file "coverage_features/plot/all.png"
 
 #######################################################
+
+# 3.3.1. Segmentation of coverage profiles
+
+pasio ./coverage/pooled.bedgraph.gz --output-file ./segmentation.bed.gz --output-mode bed
+
+# 3.3.2. Clip segmentation
+
+papolarity clip_cds \
+  ./genome/gencode.vM23.cds_features.tsv  \
+  ./segmentation.bed.gz  \
+  --drop-5-flank 15  --drop-3-flank 15 \
+  --contig-naming original \
+  --output-file ./cds_segmentation.bed.gz
+
+# 3.3.3. (optional) Squeeze/smoothen/flatten coverage profiles according to segmentation.
+
+mkdir -p ./coverage_flattened;
+(
+  for SAMPLE_BN in $SAMPLE_BNS; do
+    echo papolarity flatten_coverage \
+                    ./segmentation.bed.gz \
+                    "./coverage/${SAMPLE_BN}.bedgraph.gz" \
+                    --only-matching \
+                    --output-file "./coverage_flattened/${SAMPLE_BN}.bedgraph.gz";
+  done
+) | parallel
+
+# 3.3.4. Calculate slope for a pair of samples.
+
+CONTROL_BN='ES_noHR_noCH_ribo';
+EXPERIMENT_BNS='ES_noHR_60sCH_ribo  ES_90sHR_60sCH_ribo  ES_120sHR_60sCH_ribo  ES_150sHR_60sCH_ribo  ES_180sHR_60sCH_ribo';
+
+mkdir -p comparison/raw;
+(
+  for EXPERIMENT_BN in $EXPERIMENT_BNS; do
+      echo papolarity compare_coverages \
+          ./cds_segmentation.bed.gz \
+          "./cds_coverage/${CONTROL_BN}.bedgraph.gz" \
+          "./cds_coverage/${EXPERIMENT_BN}.bedgraph.gz" \
+          --prefix "${EXPERIMENT_BN}_" \
+          --output-file "comparison/raw/${EXPERIMENT_BN}.tsv"
+  done
+) | parallel
+
+# 3.3.5. Finalizing profile comparison statistics
+
+mkdir -p ./comparison/filtered;
+for EXPERIMENT_BN in $EXPERIMENT_BNS; do
+    csvtk --tabs join \
+        ./transcripts_list.tsv \
+        "comparison/raw/${EXPERIMENT_BN}.tsv" \
+        --out-file "./comparison/filtered/${EXPERIMENT_BN}.tsv"
+done
+
+# 3.3.6. Adjust comparison statistics
+
+mkdir -p ./comparison/adjusted;
+for EXPERIMENT_BN in $EXPERIMENT_BNS; do
+    papolarity adjust \
+        "comparison/filtered/${EXPERIMENT_BN}.tsv" \
+        --sort-field 'cds_length' \
+        --fields "${EXPERIMENT_BN}_slope" "${EXPERIMENT_BN}_logslope" "${EXPERIMENT_BN}_profile_difference" \
+        --mode z-score \
+        --window 500 \
+        --prefix 'zscore_' \
+        --output-file "./comparison/adjusted/${EXPERIMENT_BN}.tsv"
+done
+
+
+# 3.3.7. Plot per-sample distributions of slope
+
+mkdir -p ./comparison/plot;
+for EXPERIMENT_BN in $EXPERIMENT_BNS; do
+    papolarity plot_distribution \
+        "comparison/adjusted/${EXPERIMENT_BN}.tsv" \
+        --fields "${EXPERIMENT_BN}_slope" \
+        --no-legend \
+        --title 'Slope distribution' \
+        --zero-line green \
+        --xlim -5.0 5.0 \
+        --output-file "./comparison/plot/${EXPERIMENT_BN}.png"
+done
+
+# 3.3.8. Plot distributions of slopes distribution for all samples on a single figure
+
+SAMPLE_FILES=$( echo $EXPERIMENT_BNS | xargs -n1 echo | xargs -n1 -I{} echo 'comparison/adjusted/{}.tsv' | tr '\n' ' ' )
+
+csvtk --tabs join \
+    ./transcripts_list.tsv \
+    $SAMPLE_FILES \
+    --out-file comparison/adjusted/all.tsv;
+
+SAMPLE_FIELDS=$( echo $EXPERIMENT_BNS | xargs -n1 echo | xargs -n1 -I{} echo '{}_slope' | tr '\n' ' ' );
+
+papolarity plot_distribution \
+    "comparison/adjusted/all.tsv" \
+    --fields $SAMPLE_FIELDS \
+    --legend \
+    --title "Slope distributions" \
+    --zero-line green \
+    --xlim -5.0 5.0 \
+    --output-file "comparison/plot/all.png"
