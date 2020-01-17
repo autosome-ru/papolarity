@@ -59,4 +59,3 @@ def invoke(args):
                 rec.profile_difference,
             ]
             print('\t'.join(map(str, info)), file=output_stream)
-            print('\t'.join(row), file=output_stream)
