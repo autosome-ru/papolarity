@@ -3,7 +3,7 @@ from .version import __version__
 from .bin import get_coverage, pool_coverages, extract_cds_annotation, clip_cds, \
                  coverage_features, join_tables, choose_best, \
                  compare_coverages, \
-                 shrinkage, plot_distribution, \
+                 adjust, plot_distribution, \
                  flatten_coverage
 
 def configure_argparser(argparser=None):
@@ -21,8 +21,8 @@ def configure_argparser(argparser=None):
         {'cmd': 'join_tables', 'namespace': join_tables, 'help': 'Join the second table to the first one'},
         {'cmd': 'choose_best', 'namespace': choose_best, 'help': 'Choose best element from each group (e.g. best transcipt for each gene)'},
         {'cmd': 'compare_coverages', 'namespace': compare_coverages, 'help': 'Coverage profile comparison'},
-        {'cmd': 'plot_distribution', 'namespace': plot_distribution, 'help': 'Plot distributions of properties'},
-        {'cmd': 'shrinkage', 'namespace': shrinkage, 'help': 'Make length-dependend shrinkage of slope properties'},
+        {'cmd': 'plot_distribution', 'namespace': plot_distribution, 'help': 'Plot distributions of features'},
+        {'cmd': 'adjust', 'namespace': adjust, 'help': 'Make length-dependend adjustment of features'},
         {'cmd': 'flatten_coverage', 'namespace': flatten_coverage, 'help': 'Flatten coverage profiles by averaging data through given segments'},
     ]
     for subparser_config in subparser_configs:

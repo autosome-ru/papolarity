@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 SAMPLE_BNS='ES_noHR_noCH_ribo  ES_noHR_60sCH_ribo  ES_90sHR_60sCH_ribo  ES_120sHR_60sCH_ribo  ES_150sHR_60sCH_ribo  ES_180sHR_60sCH_ribo';
 
 # 3.1. Common preprocessing
@@ -101,7 +103,7 @@ done
 
 mkdir -p ./coverage_features/adjusted;
 for SAMPLE_BN in $SAMPLE_BNS; do
-    papolarity shrinkage \
+    papolarity adjust \
         "./coverage_features/filtered/${SAMPLE_BN}.tsv" \
         --sort-field 'cds_length' \
         --fields "${SAMPLE_BN}_polarity" \

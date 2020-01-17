@@ -27,11 +27,11 @@ def standardize_zscore(val, val_mean, val_stddev):
 
 def configure_argparser(argparser=None):
     if not argparser:
-        argparser = argparse.ArgumentParser(prog="shrinkage", description = "Make length-dependend shrinkage of properties")
+        argparser = argparse.ArgumentParser(prog="adjust", description = "Make length-dependend adjustment of features")
     argparser.add_argument('table', metavar='table.tsv', help='Table in tab-separated format')
     argparser.add_argument('--sort-field', dest='sorting_field', required=True, help='Field to sort a table')
     argparser.add_argument('--fields', nargs='*', dest='fields_to_correct', default=[], help='List of fields to correct')
-    argparser.add_argument('--prefix', default='shrinked_', help='Prefix for corrected column name')
+    argparser.add_argument('--prefix', default='adjusted_', help='Prefix for corrected column name')
     argparser.add_argument('--window', metavar='SIZE', dest='window_size', type=int, default=100, help='Size of sliding window (default: %(default)s)')
     argparser.add_argument('--mode', choices=['zero_mean', 'unit_stddev', 'z-score'], default='z-score', help='How to standardize statistics (default: %(default)s)')
     argparser.add_argument('--output-file', '-o', dest='output_file', help="Store results at this path")
