@@ -15,26 +15,17 @@ class Annotation:
         self.parts_by_transcript = defaultdict(list)
 
     @classmethod
-    def load(cls, filename, relevant_attributes=None, coding_only=False, attr_mapping=None, multivalue_keys=None, ignore_unknown_multivalues=False):
+    def load(cls, filename, relevant_attributes=None, multivalue_keys=frozenset(), ignore_unknown_multivalues=False, condition=None):
         annotation = cls()
-
-        if multivalue_keys is None:
-            # multivalued keys for Gencode data model:
-            # https://www.gencodegenes.org/pages/data_format.html
-            multivalue_keys = {'tag', 'ont', 'ccdsid'}
-
         records = GTFRecord.each_in_file(filename, multivalue_keys=multivalue_keys, ignore_unknown_multivalues=ignore_unknown_multivalues)
-        if attr_mapping:
-            records = map(lambda rec: rec.attributes_renamed(attr_mapping), records)
 
         if relevant_attributes is not None:
             # that's the minimum list of attributes for a library to properly work
-            necessary_attributes = {'gene_id', 'transcript_id', 'gene_type', 'transcript_type'}
+            necessary_attributes = {'gene_id', 'transcript_id',}
             relevant_attributes = relevant_attributes.union(necessary_attributes)
             records = map(lambda rec: rec.attributes_filtered(relevant_attributes), records)
-
-        if coding_only:
-            records = filter(cls.is_coding, records)
+        if condition:
+            records = filter(condition, records)
 
         for rec in records:
             annotation.push_record(rec)
@@ -166,11 +157,3 @@ class Annotation:
                 transcript_id = transcript_id[0:-3]
             sequence = ''.join(hdr_seq_pair[1] for hdr_seq_pair in hdr_seq_pairs)
             yield (transcript_id, sequence)
-
-    @classmethod
-    def is_coding(cls, record):
-        if record.attributes['gene_type'] != 'protein_coding':
-            return False
-        if (record.type != 'gene') and (record.attributes['transcript_type'] != 'protein_coding'):
-            return False
-        return True

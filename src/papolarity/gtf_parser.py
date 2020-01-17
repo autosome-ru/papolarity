@@ -40,21 +40,6 @@ class GTFRecord(namedtuple("GTFRecord", _gff_info_fields)):
         attributes_filtered = {k: v  for (k,v) in self.attributes.items()  if k in relevant_attributes}
         return GTFRecord(self.contig, self.source, self.type, self.start, self.stop, self.score, self.strand, self.phase, attributes_filtered)
 
-    def attributes_renamed(self, attr_mapping):
-        '''
-        Use to rename incorrectly named attributes:
-          record.attributes_renamed({'wrong_attr_name': 'correct_attr_name', ...})
-        Returns a new record with modified attributes; unspecified attributes are left unmodified
-        '''
-        attributes_modified = {}
-        for (orig_attr_name, attr_value) in self.attributes.items():
-            if orig_attr_name in attr_mapping:
-                attr_name = attr_mapping[orig_attr_name]
-            else:
-                attr_name = orig_attr_name
-            attributes_modified[attr_name] = attr_value
-        return GTFRecord(self.contig, self.source, self.type, self.start, self.stop, self.score, self.strand, self.phase, attributes_modified)
-
     def encoded_attributes(self):
         return self.encode_gtf_attributes(self.attributes)
 
