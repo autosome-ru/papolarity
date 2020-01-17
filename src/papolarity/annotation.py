@@ -15,7 +15,7 @@ class Annotation:
         self.parts_by_transcript = defaultdict(list)
 
     @classmethod
-    def load(cls, filename, relevant_attributes=None, coding_only=False, attr_mapping=None, multivalue_keys=None):
+    def load(cls, filename, relevant_attributes=None, coding_only=False, attr_mapping=None, multivalue_keys=None, ignore_unknown_multivalues=False):
         annotation = cls()
 
         if multivalue_keys is None:
@@ -23,7 +23,7 @@ class Annotation:
             # https://www.gencodegenes.org/pages/data_format.html
             multivalue_keys = {'tag', 'ont', 'ccdsid'}
 
-        records = GTFRecord.each_in_file(filename, multivalue_keys=multivalue_keys)
+        records = GTFRecord.each_in_file(filename, multivalue_keys=multivalue_keys, ignore_unknown_multivalues=ignore_unknown_multivalues)
         if attr_mapping:
             records = map(lambda rec: rec.attributes_renamed(attr_mapping), records)
 

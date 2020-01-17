@@ -66,7 +66,7 @@ class GTFRecord(namedtuple("GTFRecord", _gff_info_fields)):
         return ' '.join(attr_strings)
 
     @classmethod
-    def each_in_file(cls, filename, multivalue_keys=None):
+    def each_in_file(cls, filename, multivalue_keys=None, ignore_unknown_multivalues=False):
         """
         A minimalistic GTF format parser.
         Yields objects that contain info about a single GTF feature.
@@ -95,12 +95,12 @@ class GTFRecord(namedtuple("GTFRecord", _gff_info_fields)):
                     "score": None if parts[5] == "." else float(parts[5]),
                     "strand": parts[6],
                     "phase": None if parts[7] == "." else parts[7],
-                    "attributes": cls.parse_gtf_attributes(parts[8], multivalue_keys=multivalue_keys),
+                    "attributes": cls.parse_gtf_attributes(parts[8], multivalue_keys=multivalue_keys, ignore_unknown_multivalues=ignore_unknown_multivalues),
                 }
                 yield GTFRecord(**normalized_info)
 
     @classmethod
-    def parse_gtf_attributes(cls, attribute_string, multivalue_keys=None):
+    def parse_gtf_attributes(cls, attribute_string, multivalue_keys=None, ignore_unknown_multivalues=False):
         """Parse the GTF attribute column and return a dict"""
         if attribute_string == ".":
             return {}
@@ -120,14 +120,11 @@ class GTFRecord(namedtuple("GTFRecord", _gff_info_fields)):
                 if key not in ret:
                     ret[key] = val
                 else:
-                    raise Exception(f'Key `{key}` already in attributes.\n'
-                                     'Probably you should add this attribute to a set of `multivalue_keys`')
+                    if not ignore_unknown_multivalues:
+                        raise Exception(f'Key `{key}` already in attributes.\n'
+                                         'Probably you should add this attribute to a set of `multivalue_keys`')
             else:
                 if key not in ret:
                     ret[key] = []
                 ret[key].append(val)
         return ret
-
-# deprecated
-def parse_gtf(filename, multivalue_keys=None):
-    yield from GTFRecord.each_in_file(filename, multivalue_keys=multivalue_keys)
