@@ -11,11 +11,7 @@ papolarity extract_cds_annotation \
     --output-file ./genome/gencode.vM23.cds_features.tsv
 
 
-csvtk --tabs mutate2 genome/gencode.vM23.cds_features.tsv \
-                     --name cds_length \
-                     --expression '$cds_stop-$cds_start' \
-                     --digits 0 \
-  | csvtk --tabs cut \
+csvtk --tabs cut genome/gencode.vM23.cds_features.tsv \
                  --fields 'transcript_id,transcript_length,cds_length' \
                  --out-file genome/transcript_lengths.tsv
 
