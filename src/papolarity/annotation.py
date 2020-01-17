@@ -101,6 +101,10 @@ class Annotation:
         strand = self.transcript_strand(transcript_id)
 
         transcript_length = sum(exon.length for exon in exons)
+
+        if len(cds_segments) == 0:
+            return CodingTranscriptInfo(gene_id, transcript_id, transcript_length, '', '')
+
         len_cds_in_transcript = sum(cds.length for cds in cds_segments)
         if strand == '+':
             genomic_cds_start = min([rec.start for rec in cds_segments])

@@ -17,7 +17,7 @@ class DataclassTsvSerializable:
 
     def tsv_string(self):
         fields = [getattr(self, field.name) for field in dataclasses.fields(self)] + [getattr(self, prop) for (name, prop) in self.computable_properties]
-        return '\t'.join(map(str, fields))
+        return '\t'.join([(str(f) if f else '') for f in fields])
 
     @classmethod
     def from_string(cls, line, **kwargs):
@@ -27,7 +27,8 @@ class DataclassTsvSerializable:
             if field.metadata.get('skip_conversion', False):
                 attrs[field.name] = value
             else:
-                attrs[field.name] = field.type(value)
+                converter = field.metadata.get('converter', lambda value: field.type(value))
+                attrs[field.name] = converter(value)
         return cls(**attrs, **kwargs)
 
     @classmethod

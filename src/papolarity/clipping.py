@@ -43,7 +43,10 @@ class Clipper:
         for (contig_name, segments) in groupby(bed_stream, lambda segment: segment.chrom):
             if contig_name in cds_info_by_transcript:
                 cds_info = cds_info_by_transcript[contig_name]
-                yield from self.segments_clipped_to_cds(segments, cds_info, contig_name)
+                if cds_info.is_coding:
+                    yield from self.segments_clipped_to_cds(segments, cds_info, contig_name)
+                elif allow_non_matching:
+                    yield from segments
             else:
                 if allow_non_matching:
                     yield from segments
