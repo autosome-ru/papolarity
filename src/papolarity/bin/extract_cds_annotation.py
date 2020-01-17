@@ -4,20 +4,22 @@ from ..annotation import Annotation
 from ..dto.coding_transcript_info import CodingTranscriptInfo
 
 def parse_condition(condition_str):
-    k,vs = condition_str.split('=')
+    k,vs = condition_str.split('=', maxsplit=1)
     return (k, vs.split(','))
 
 # Known issue: filters now treat all attribute values as strings
 def create_record_filter(condition_config):
     k,vs = condition_config
-    return lambda rec: str(rec.attributes.get(k)) in vs
+    return lambda rec: str(rec.attributes.get(k, '')) in vs
 
 def configure_argparser(argparser=None):
     if not argparser:
         argparser = argparse.ArgumentParser(prog="extract_cds_annotation", description = "Extract CDS annotation in transcriptomic coordinates from genomic annotation")
     argparser.add_argument('gtf_annotation', metavar='annotation.gtf', help='Genomic annotation in GTF-format')
     argparser.add_argument('--output-file', '-o', dest='output_file', help="Store results at this path")
-    argparser.add_argument('--filter', action='append', dest='filters', default=[], help="Store results at this path")
+    argparser.add_argument('--attr-filter', action='append', dest='filters', default=[], 
+                                            help="Filter records so that attributes has one of specified values.\n"
+                                                 "Format: `attribute=value_1,value_2,...`")
     # Known issue: Right now all multivalue keys are ignored, so filters won't work with them
     # ToDo: add ability to specify multivalue keys and add filters like `--filter-has tag value`
     return argparser
