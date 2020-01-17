@@ -31,6 +31,7 @@ def configure_argparser(argparser=None):
     argparser.add_argument('segmentation', metavar='segmentation.bed', help='Segmentation')
     argparser.add_argument('coverage_control', metavar='control.bedgraph', help='Coverage for control data')
     argparser.add_argument('coverage_experiment', metavar='experiment.bedgraph', help='Coverage for experiment data')
+    argparser.add_argument('--prefix', default='', help='Prefix of feature columns (to distinguish samples)')
     argparser.add_argument('--output-file', '-o', dest='output_file', help="Store results at this path")
     return argparser
 
@@ -45,6 +46,16 @@ def invoke(args):
     control_coverages = TranscriptCoverage.each_in_file(args.coverage_control, header=False, dtype=int)
     experiment_coverages = TranscriptCoverage.each_in_file(args.coverage_experiment, header=False, dtype=int)
 
-    transcript_comparison_infos = compare_coverage_streams(segmentation_stream, control_coverages, experiment_coverages)
     with open_for_write(args.output_file) as output_stream:
-        CoverageComparisonStats.print_tsv(transcript_comparison_infos, header=True, file=output_stream)
+        feature_names = ['slope', 'weighted_slope', 'multipoint_slope', 'logslope', 'weighted_logslope', 'multipoint_logslope', 'profile_difference',]
+        prefixed_feature_names = [f'{args.prefix}{name}' for name in feature_names]
+        header = ['transcript_id', *prefixed_feature_names]
+        print('\t'.join(header), file=output_stream)
+        for rec in compare_coverage_streams(segmentation_stream, control_coverages, experiment_coverages):
+            row = [
+                rec.transcript_id,
+                rec.slope, rec.weighted_slope, rec.multipoint_slope,
+                rec.logslope, rec.weighted_logslope, rec.multipoint_logslope,
+                rec.profile_difference,
+            ]
+            print('\t'.join(row), file=output_stream)
