@@ -26,7 +26,13 @@ csvtk --tabs cut genome/gencode.vM23.cds_features.tsv \
 # 3.1.2. Preparing coverage profiles
 
 mkdir -p ./coverage/;
-find ./align/ -maxdepth 1 -xtype f -name '*.bam' | xargs -n1 basename -s .bam | xargs -n1 -I{} echo 'papolarity get_coverage ./align/{}.bam --sort --dtype int --output-file ./coverage/{}.bedgraph.gz' | parallel;
+(
+  for SAMPLE_BN in $SAMPLE_BNS; do
+    echo papolarity get_coverage "./align/${SAMPLE_BN}.bam" \
+                    --sort --dtype int \
+                    --output-file "./coverage/${SAMPLE_BN}.bedgraph.gz" ;
+  done
+) | parallel
 
 
 # 3.1.3. Pooling coverage profiles
@@ -37,11 +43,16 @@ papolarity pool_coverages ./coverage/*.bedgraph.gz --dtype int --output-file ./c
 # 3.1.4. Clipping profiles withing coding segments
 
 mkdir -p ./cds_coverage;
-find ./coverage/ -maxdepth 1 -xtype f -name '*.bedgraph.gz' \
-  | xargs -n1 basename \
-  | xargs -n1 -I{} echo \
-    'papolarity clip_cds ./genome/gencode.vM23.cds_features.tsv  ./coverage/{} --drop-5-flank 15  --drop-3-flank 15  --contig-naming original --output-file ./cds_coverage/{}' \
-  | parallel
+(
+  for SAMPLE_BN in $SAMPLE_BNS 'pooled'; do
+    echo papolarity clip_cds \
+                    ./genome/gencode.vM23.cds_features.tsv \
+                    "./coverage/${SAMPLE_BN}.bedgraph.gz" \
+                    --drop-5-flank 15  --drop-3-flank 15 \
+                    --contig-naming original \
+                    --output-file "./cds_coverage/${SAMPLE_BN}.bedgraph.gz" ;
+  done
+) | parallel
 
 
 #################################################
@@ -52,7 +63,7 @@ find ./coverage/ -maxdepth 1 -xtype f -name '*.bedgraph.gz' \
 
 mkdir -p ./coverage_features/raw;
 (
-for SAMPLE_BN in $SAMPLE_BNS 'pooled'; do
+  for SAMPLE_BN in $SAMPLE_BNS 'pooled'; do
     echo papolarity coverage_features \
                     "./cds_coverage/${SAMPLE_BN}.bedgraph.gz" \
                     --prefix "${SAMPLE_BN}_" \
@@ -127,9 +138,7 @@ for SAMPLE_BN in $SAMPLE_BNS; do
         --output-file "coverage_features/plot/${SAMPLE_BN}.png"
 done
 
-
-#######################################################
-
+# 3.2.6. Plot polarity score distribution for all samples on a single figure
 
 SAMPLE_FILES=$( echo $SAMPLE_BNS | xargs -n1 echo | xargs -n1 -I{} echo 'coverage_features/filtered/{}.tsv' | tr '\n' ' ' )
 
@@ -149,7 +158,4 @@ papolarity plot_distribution \
     --xlim -1.0 1.0 \
     --output-file "coverage_features/plot/all.png"
 
-
 #######################################################
-
-
