@@ -2,15 +2,7 @@ import argparse
 from ..gzip_utils import open_for_write
 from ..annotation import Annotation
 from ..dto.coding_transcript_info import CodingTranscriptInfo
-
-def parse_condition(condition_str):
-    k,vs = condition_str.split('=', maxsplit=1)
-    return (k, vs.split(','))
-
-# Known issue: filters now treat all attribute values as strings
-def create_record_filter(condition_config):
-    k,vs = condition_config
-    return lambda rec: str(rec.attributes.get(k, '')) in vs
+from ..annotation_filter import parse_condition, create_record_filter
 
 def configure_argparser(argparser=None):
     if not argparser:
