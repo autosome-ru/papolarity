@@ -6,7 +6,7 @@ SAMPLE_BNS='ES_noHR_noCH_ribo  ES_noHR_60sCH_ribo  ES_90sHR_60sCH_ribo  ES_120sH
 
 # 3.1.1. Preprocessing transcripts annotation
 
-papolarity extract_cds_annotation \
+papolarity cds_annotation \
     ./genome/gencode.vM23.basic.annotation.gtf \
     --attr-filter transcript_type=protein_coding \
     --attr-filter gene_type=protein_coding \
@@ -37,7 +37,7 @@ mkdir -p ./coverage/;
 
 # 3.1.3. Pooling coverage profiles
 
-papolarity pool_coverages ./coverage/*.bedgraph.gz --dtype int --output-file ./coverage/pooled.bedgraph.gz;
+papolarity pool_coverage ./coverage/*.bedgraph.gz --dtype int --output-file ./coverage/pooled.bedgraph.gz;
 
 
 # 3.1.4. Clipping profiles withing coding segments
@@ -114,8 +114,8 @@ done
 
 mkdir -p ./coverage_features/adjusted;
 for SAMPLE_BN in $SAMPLE_BNS; do
-    papolarity adjust \
-        "./coverage_features/filtered/${SAMPLE_BN}.tsv" \
+    papolarity adjust_features \
+        "./coverage_features/filtered/${SAMPLE}.tsv" \
         --sort-field 'cds_length' \
         --fields "${SAMPLE_BN}_polarity" \
         --mode z-score \
@@ -197,7 +197,7 @@ EXPERIMENT_BNS='ES_noHR_60sCH_ribo  ES_90sHR_60sCH_ribo  ES_120sHR_60sCH_ribo  E
 mkdir -p ./comparison/raw;
 (
   for EXPERIMENT_BN in $EXPERIMENT_BNS; do
-      echo papolarity compare_coverages \
+      echo papolarity compare_coverage \
                       ./cds_segmentation.bed.gz \
                       "./cds_coverage/${CONTROL_BN}.bedgraph.gz" \
                       "./cds_coverage/${EXPERIMENT_BN}.bedgraph.gz" \
@@ -220,8 +220,8 @@ done
 
 mkdir -p ./comparison/adjusted;
 for EXPERIMENT_BN in $EXPERIMENT_BNS; do
-    papolarity adjust \
-        "comparison/filtered/${EXPERIMENT_BN}.tsv" \
+    papolarity adjust_features \
+        "comparison/filtered/${EXPERIMENT}.tsv" \
         --sort-field 'cds_length' \
         --fields "${EXPERIMENT_BN}_slope" "${EXPERIMENT_BN}_logslope" "${EXPERIMENT_BN}_discrepancy" \
         --mode z-score \

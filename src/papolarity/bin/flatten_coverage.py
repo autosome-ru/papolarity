@@ -14,7 +14,7 @@ def configure_argparser(argparser=None):
         )
     argparser.add_argument('segmentation', help='Segmentation of contigs in bed format')
     argparser.add_argument('coverage', help='Coverage in bedgraph format')
-    argparser.add_argument('--only-matching', action='store_true', help="Don't pool coverages of transcripts which are present not in all files")
+    argparser.add_argument('--only-matching', action='store_true', help="Don't pool coverage profiles of transcripts which are present not in all files")
     argparser.add_argument('--output-file', '-o', dest='output_file', help="Store results at this path")
     argparser.add_argument('--rounding', choices=['no', 'round', 'ceil', 'floor'], default='none', help="Rounding of float values (default: no rounding)")
     return argparser

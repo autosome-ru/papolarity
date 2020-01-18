@@ -14,7 +14,7 @@ def create_record_filter(condition_config):
 
 def configure_argparser(argparser=None):
     if not argparser:
-        argparser = argparse.ArgumentParser(prog="extract_cds_annotation", description = "Extract CDS annotation in transcriptomic coordinates from genomic annotation")
+        argparser = argparse.ArgumentParser(prog="cds_annotation", description = "Extract CDS annotation in transcriptomic coordinates from genomic annotation")
     argparser.add_argument('gtf_annotation', metavar='annotation.gtf', help='Genomic annotation in GTF-format')
     argparser.add_argument('--output-file', '-o', dest='output_file', help="Store results at this path")
     argparser.add_argument('--attr-filter', action='append', dest='filters', default=[], 

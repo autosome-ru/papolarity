@@ -18,13 +18,13 @@ def main():
     invoke(args)
 
 def invoke(args):
-    coverages = TranscriptCoverage.each_in_file(args.coverage, header=False, dtype=int)
+    coverage_profiles = TranscriptCoverage.each_in_file(args.coverage, header=False, dtype=int)
     with open_for_write(args.output_file) as output_stream:
         feature_names = ['mean_coverage', 'total_coverage', 'polarity']
         prefixed_feature_names = [f'{args.prefix}{name}' for name in feature_names]
         header = ['transcript_id', *prefixed_feature_names]
         print('\t'.join(header), file=output_stream)
-        for transcript_coverage in coverages:
+        for transcript_coverage in coverage_profiles:
             coverage = transcript_coverage.coverage
 
             transcript_id = transcript_coverage.transcript_id

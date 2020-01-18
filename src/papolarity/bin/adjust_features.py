@@ -27,7 +27,7 @@ def standardize_zscore(val, val_mean, val_stddev):
 
 def configure_argparser(argparser=None):
     if not argparser:
-        argparser = argparse.ArgumentParser(prog="adjust", description = "Make length-dependend adjustment of features")
+        argparser = argparse.ArgumentParser(prog="adjust_features", description = "Make length-dependend adjustment of features")
     argparser.add_argument('table', metavar='table.tsv', help='Table in tab-separated format')
     argparser.add_argument('--sort-field', dest='sorting_field', required=True, help='Field to sort a table')
     argparser.add_argument('--fields', nargs='*', dest='fields_to_correct', default=[], help='List of fields to correct')

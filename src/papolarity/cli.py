@@ -1,9 +1,9 @@
 import argparse
 from .version import __version__
-from .bin import get_coverage, pool_coverages, extract_cds_annotation, clip_cds, \
+from .bin import get_coverage, pool_coverage, cds_annotation, clip_cds, \
                  coverage_features, choose_best, \
-                 compare_coverages, \
-                 adjust, plot_distribution, \
+                 compare_coverage, \
+                 adjust_features, plot_distribution, \
                  flatten_coverage
 
 def configure_argparser(argparser=None):
@@ -14,14 +14,14 @@ def configure_argparser(argparser=None):
     
     subparser_configs = [
         {'cmd': 'get_coverage', 'namespace': get_coverage, 'help': 'Generates coverage from an alignment'},
-        {'cmd': 'pool_coverages', 'namespace': pool_coverages, 'help': 'Pool coverage profiles'},
-        {'cmd': 'extract_cds_annotation', 'namespace': extract_cds_annotation, 'help': 'Extract CDS annotation in transcriptomic coordinates from genomic annotation'},
+        {'cmd': 'pool_coverage', 'namespace': pool_coverage, 'help': 'Pool coverage profiles'},
+        {'cmd': 'cds_annotation', 'namespace': cds_annotation, 'help': 'Extract CDS annotation in transcriptomic coordinates from genomic annotation'},
         {'cmd': 'clip_cds', 'namespace': clip_cds, 'help': 'Clip any bed file in transcriptomic coordinates to CDS-region'},
         {'cmd': 'coverage_features', 'namespace': coverage_features, 'help': 'Calculate coverage profile features'},
         {'cmd': 'choose_best', 'namespace': choose_best, 'help': 'Choose best element from each group (e.g. best transcipt for each gene)'},
-        {'cmd': 'compare_coverages', 'namespace': compare_coverages, 'help': 'Coverage profile comparison'},
+        {'cmd': 'compare_coverage', 'namespace': compare_coverage, 'help': 'Coverage profile comparison'},
         {'cmd': 'plot_distribution', 'namespace': plot_distribution, 'help': 'Plot distributions of features'},
-        {'cmd': 'adjust', 'namespace': adjust, 'help': 'Make length-dependend adjustment of features'},
+        {'cmd': 'adjust_features', 'namespace': adjust_features, 'help': 'Make length-dependend adjustment of features'},
         {'cmd': 'flatten_coverage', 'namespace': flatten_coverage, 'help': 'Flatten coverage profiles by averaging data through given segments'},
     ]
     for subparser_config in subparser_configs:
