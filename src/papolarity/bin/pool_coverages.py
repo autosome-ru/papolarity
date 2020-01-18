@@ -12,7 +12,7 @@ def configure_argparser(argparser=None):
     argparser.add_argument('--only-matching', action='store_true', help="Don't pool coverages of transcripts which are present not in all files")
     argparser.add_argument('--output-file', '-o', dest='output_file', help="Store results at this path")
     argparser.add_argument('--output-mode', choices=['sum', 'mean'], default='sum', help="What to report")
-    argparser.add_argument('--dtype', choices=['int', 'float'], default='int', help="Make int or float-valued coverage (default: int)")
+    argparser.add_argument('--dtype', choices=['int', 'float'], default='int', help="Make int or float-valued coverage (default: %(default)s)")
     return argparser
 
 def main():

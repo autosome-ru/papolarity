@@ -138,7 +138,10 @@ for SAMPLE_BN in $SAMPLE_BNS; do
         --output-file "coverage_features/plot/${SAMPLE_BN}.png"
 done
 
-# 3.2.6. Plot polarity score distribution for all samples on a single figure
+# 3.2.6. (supplementary step) Plot polarity score distribution for all samples on a single figure
+
+# Note: coverage_features/adjusted/all.tsv is not perfectly formatted - it has several identical columns. 
+# We use it for the only reason - to draw the plot.
 
 SAMPLE_FILES=$( echo $SAMPLE_BNS | xargs -n1 echo | xargs -n1 -I{} echo 'coverage_features/adjusted/{}.tsv' | tr '\n' ' ' )
 
@@ -220,7 +223,7 @@ for EXPERIMENT_BN in $EXPERIMENT_BNS; do
     papolarity adjust \
         "comparison/filtered/${EXPERIMENT_BN}.tsv" \
         --sort-field 'cds_length' \
-        --fields "${EXPERIMENT_BN}_slope" "${EXPERIMENT_BN}_logslope" "${EXPERIMENT_BN}_profile_difference" \
+        --fields "${EXPERIMENT_BN}_slope" "${EXPERIMENT_BN}_logslope" "${EXPERIMENT_BN}_discrepancy" \
         --mode z-score \
         --window 500 \
         --prefix 'zscore_' \
@@ -238,6 +241,7 @@ for EXPERIMENT_BN in $EXPERIMENT_BNS; do
         --no-legend \
         --title 'Slope distribution' \
         --zero-line green \
+        --xlim -100.0 100.0 \
         --output-file "./comparison/plot/${EXPERIMENT_BN}_slope.png"
 done
 
@@ -249,10 +253,26 @@ for EXPERIMENT_BN in $EXPERIMENT_BNS; do
         --no-legend \
         --title 'Logarithmic slope distribution' \
         --zero-line green \
+        --xlim -10 10 \
         --output-file "./comparison/plot/${EXPERIMENT_BN}_logslope.png"
 done
 
-# 3.3.8. Plot distributions of slopes distribution for all samples on a single figure
+mkdir -p ./comparison/plot;
+for EXPERIMENT_BN in $EXPERIMENT_BNS; do
+    papolarity plot_distribution \
+        "comparison/adjusted/${EXPERIMENT_BN}.tsv" \
+        --fields "${EXPERIMENT_BN}_discrepancy" \
+        --no-legend \
+        --title 'Distribution of discrepancies' \
+        --zero-line green \
+        --xlim 0 2 \
+        --output-file "./comparison/plot/${EXPERIMENT_BN}_logslope.png"
+done
+
+# 3.3.8. (supplementary step) Plot distributions of slopes distribution for all samples on a single figure
+
+# Note: comparison/adjusted/all.tsv is not perfectly formatted - it has several identical columns. 
+# We use it for the only reason - to draw the plot.
 
 SAMPLE_FILES=$( echo $EXPERIMENT_BNS | xargs -n1 echo | xargs -n1 -I{} echo 'comparison/adjusted/{}.tsv' | tr '\n' ' ' )
 
@@ -261,7 +281,7 @@ csvtk --tabs join \
     $SAMPLE_FILES \
     --out-file comparison/adjusted/all.tsv;
 
-for FIELD in slope logslope profile_difference; do
+for FIELD in slope logslope discrepancy; do
     SAMPLE_FIELDS=$( echo $EXPERIMENT_BNS | xargs -n1 echo | xargs -n1 -I{} echo "{}_${FIELD}" | tr '\n' ' ' );
 
     papolarity plot_distribution \
