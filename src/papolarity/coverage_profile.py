@@ -1,6 +1,3 @@
-from decimal import Decimal
-import itertools
-import numpy as np
 from . import coreutils_sort
 from .dto.transcript_coverage import TranscriptCoverage
 from .dto.coverage_interval import CoverageInterval

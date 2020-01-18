@@ -194,7 +194,7 @@ mkdir -p ./coverage_flattened;
 CONTROL_BN='ES_noHR_noCH_ribo';
 EXPERIMENT_BNS='ES_noHR_60sCH_ribo  ES_90sHR_60sCH_ribo  ES_120sHR_60sCH_ribo  ES_150sHR_60sCH_ribo  ES_180sHR_60sCH_ribo';
 
-mkdir -p comparison/raw;
+mkdir -p ./comparison/raw;
 (
   for EXPERIMENT_BN in $EXPERIMENT_BNS; do
       echo papolarity compare_coverages \

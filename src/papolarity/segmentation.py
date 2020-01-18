@@ -2,7 +2,6 @@ import itertools
 import dataclasses
 from typing import List
 import numpy as np
-from .utils import pool_profiles
 from .dto.interval import Interval
 
 def stabilize_profile(profile, segments):

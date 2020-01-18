@@ -1,8 +1,8 @@
 from sklearn.linear_model import LinearRegression
 import numpy as np
 from math import log
-
 from collections import namedtuple
+
 WeigthedPoints = namedtuple('WeigthedPoints', ['xs', 'ys', 'weights'])
 
 def segmentation_stops(segmentation):

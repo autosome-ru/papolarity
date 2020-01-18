@@ -1,7 +1,6 @@
 # GFF parser adapted from https://techoverflow.net/2013/11/30/a-simple-gff3-parser-in-python/
 
 from collections import namedtuple
-import gzip
 import json
 from .gzip_utils import open_for_read
 

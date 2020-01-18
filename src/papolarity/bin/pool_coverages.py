@@ -1,6 +1,6 @@
 import argparse
 import numpy as np
-from ..utils import align_iterators, pool_profiles, get_constant_intervals
+from ..utils import align_iterators, get_constant_intervals
 from ..dto.coverage_interval import CoverageInterval
 from ..dto.transcript_coverage import TranscriptCoverage
 from ..gzip_utils import open_for_write

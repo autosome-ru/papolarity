@@ -71,9 +71,6 @@ def _next_unless_exhausted(iterator, key, exhausted, object_missing=None):
     else:
         return (object_missing, _sentinel_key, True)
 
-def pool_profiles(profiles):
-    return np.sum(profiles, axis=0)
-
 def get_constant_intervals(profile):
     if len(profile) == 0:
         return []

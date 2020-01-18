@@ -1,4 +1,3 @@
-import sys
 import argparse
 import itertools
 from ..gzip_utils import open_for_write
