@@ -238,8 +238,18 @@ for EXPERIMENT_BN in $EXPERIMENT_BNS; do
         --no-legend \
         --title 'Slope distribution' \
         --zero-line green \
-        --xlim -5.0 5.0 \
-        --output-file "./comparison/plot/${EXPERIMENT_BN}.png"
+        --output-file "./comparison/plot/${EXPERIMENT_BN}_slope.png"
+done
+
+mkdir -p ./comparison/plot;
+for EXPERIMENT_BN in $EXPERIMENT_BNS; do
+    papolarity plot_distribution \
+        "comparison/adjusted/${EXPERIMENT_BN}.tsv" \
+        --fields "${EXPERIMENT_BN}_logslope" \
+        --no-legend \
+        --title 'Logarithmic slope distribution' \
+        --zero-line green \
+        --output-file "./comparison/plot/${EXPERIMENT_BN}_logslope.png"
 done
 
 # 3.3.8. Plot distributions of slopes distribution for all samples on a single figure
@@ -251,13 +261,14 @@ csvtk --tabs join \
     $SAMPLE_FILES \
     --out-file comparison/adjusted/all.tsv;
 
-SAMPLE_FIELDS=$( echo $EXPERIMENT_BNS | xargs -n1 echo | xargs -n1 -I{} echo '{}_slope' | tr '\n' ' ' );
+for FIELD in slope logslope profile_difference; do
+    SAMPLE_FIELDS=$( echo $EXPERIMENT_BNS | xargs -n1 echo | xargs -n1 -I{} echo "{}_${FIELD}" | tr '\n' ' ' );
 
-papolarity plot_distribution \
-    "comparison/adjusted/all.tsv" \
-    --fields $SAMPLE_FIELDS \
-    --legend \
-    --title "Slope distributions" \
-    --zero-line green \
-    --xlim -5.0 5.0 \
-    --output-file "comparison/plot/all.png"
+    papolarity plot_distribution \
+        "comparison/adjusted/all.tsv" \
+        --fields $SAMPLE_FIELDS \
+        --legend \
+        --title "${FIELD} distributions" \
+        --zero-line green \
+        --output-file "comparison/plot/all_${FIELD}.png";
+done
