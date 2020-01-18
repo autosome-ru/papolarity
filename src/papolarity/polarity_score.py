@@ -2,6 +2,9 @@ import numpy as np
 
 def polarity_score(coverage):
     coverage = np.array(coverage)
-    normalized_coverage = coverage / coverage.sum()
+    total_coverage = coverage.sum()
+    if total_coverage == 0:
+        return 0.0
+    normalized_coverage = coverage / total_coverage
     positions = np.linspace(-1, 1, len(coverage))
     return np.dot(normalized_coverage, positions)
