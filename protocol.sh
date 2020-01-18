@@ -170,13 +170,13 @@ pasio ./coverage/pooled.bedgraph.gz --output-file ./segmentation.bed.gz --output
 # 3.3.2. Clip segmentation
 
 papolarity clip_cds \
-  ./genome/gencode.vM23.cds_features.tsv  \
-  ./segmentation.bed.gz  \
-  --drop-5-flank 15  --drop-3-flank 15 \
-  --contig-naming original \
-  --output-file ./cds_segmentation.bed.gz
+    ./genome/gencode.vM23.cds_features.tsv  \
+    ./segmentation.bed.gz  \
+    --drop-5-flank 15  --drop-3-flank 15 \
+    --contig-naming original \
+    --output-file ./cds_segmentation.bed.gz
 
-# 3.3.3. (optional) Squeeze/smoothen/flatten coverage profiles according to segmentation.
+# 3.3.3. (supplementary step) Flatten coverage profiles according to segmentation.
 
 mkdir -p ./coverage_flattened;
 (
@@ -198,11 +198,11 @@ mkdir -p comparison/raw;
 (
   for EXPERIMENT_BN in $EXPERIMENT_BNS; do
       echo papolarity compare_coverages \
-          ./cds_segmentation.bed.gz \
-          "./cds_coverage/${CONTROL_BN}.bedgraph.gz" \
-          "./cds_coverage/${EXPERIMENT_BN}.bedgraph.gz" \
-          --prefix "${EXPERIMENT_BN}_" \
-          --output-file "comparison/raw/${EXPERIMENT_BN}.tsv"
+                      ./cds_segmentation.bed.gz \
+                      "./cds_coverage/${CONTROL_BN}.bedgraph.gz" \
+                      "./cds_coverage/${EXPERIMENT_BN}.bedgraph.gz" \
+                      --prefix "${EXPERIMENT_BN}_" \
+                      --output-file "comparison/raw/${EXPERIMENT_BN}.tsv"
   done
 ) | parallel
 
@@ -229,7 +229,6 @@ for EXPERIMENT_BN in $EXPERIMENT_BNS; do
         --prefix 'zscore_' \
         --output-file "./comparison/adjusted/${EXPERIMENT_BN}.tsv"
 done
-
 
 # 3.3.7. Plot per-sample distributions of slope
 
