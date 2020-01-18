@@ -180,7 +180,7 @@ papolarity clip_cds \
 
 mkdir -p ./cds_coverage_flattened;
 (
-  for SAMPLE in $SAMPLES; do
+  for SAMPLE in $SAMPLES 'pooled'; do
     echo papolarity flatten_coverage \
                     ./cds_segmentation.bed.gz \
                     "./cds_coverage/${SAMPLE}.bedgraph.gz" \
