@@ -1,7 +1,6 @@
 import argparse
 import math
 from pybedtools import BedTool
-import pasio
 from ..utils import align_iterators, get_constant_intervals
 from ..gzip_utils import open_for_write
 from ..dto.coverage_interval import CoverageInterval

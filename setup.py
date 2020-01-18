@@ -34,7 +34,7 @@ setuptools.setup(
         'Programming Language :: Python :: 3.7',
     ],
     python_requires='>=3.7',
-    install_requires=['pybedtools >= 0.8.0', 'numpy >= 1.8.0', 'pasio >= 1.1.2', 'sklearn', 'six', 'matplotlib', 'seaborn'],
+    install_requires=['pybedtools >= 0.8.0', 'numpy >= 1.8.0', 'sklearn', 'six', 'matplotlib', 'seaborn'],
     extras_require={
         'dev': ['pytest', 'pytest-benchmark', 'flake8', 'tox', 'wheel', 'twine', 'setuptools_scm'],
     },

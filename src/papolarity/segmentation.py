@@ -2,15 +2,8 @@ import itertools
 import dataclasses
 from typing import List
 import numpy as np
-import pasio
 from .utils import pool_profiles
 from .dto.interval import Interval
-
-def make_joint_segmentation(coverages, splitter):
-    pooled_coverage = pool_profiles(coverages)
-    if len(pooled_coverage) == 0:
-        return None
-    return list(pasio.segments_with_scores(pooled_coverage, splitter))
 
 def stabilize_profile(profile, segments):
     stable_profile = np.zeros_like(profile)
