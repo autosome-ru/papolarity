@@ -52,14 +52,16 @@ def invoke(args):
     else:
         raise ValueError(f'Unknown mode `{args.mode}`')
 
-    dtype = float
     data = list(each_in_tsv(args.table))
 
     fields = list(data[0].keys())
-    for field in [args.sorting_field, *args.fields_to_correct]:
-        for row in data:
-            row[field] = dtype(row[field])
-    data.sort(key=lambda info: info[args.sorting_field])
+    TRANSFORMED_FIELDS_KEY = object() # unique object not to clash with column name
+    for row in data:
+        row[TRANSFORMED_FIELDS_KEY] = {}
+        for field in [args.sorting_field, *args.fields_to_correct]:
+            # we don't want to modify original values because type conversion can screw integer values during output
+            row[TRANSFORMED_FIELDS_KEY][field] = float(row[field])
+    data.sort(key=lambda info: info[TRANSFORMED_FIELDS_KEY][args.sorting_field])
 
     output_fields = fields[:]
     for field in args.fields_to_correct:
@@ -70,6 +72,6 @@ def invoke(args):
         for row, window in sliding_row_with_window(data, args.window_size):
             modified_row = dict(row)
             for field in args.fields_to_correct:
-                field_vals = [window_row[field] for window_row in window]
-                modified_row[f'{args.prefix}{field}'] = standardization(row[field], val_mean=np.mean(field_vals), val_stddev=np.std(field_vals))
+                field_vals = [window_row[TRANSFORMED_FIELDS_KEY][field] for window_row in window]
+                modified_row[f'{args.prefix}{field}'] = standardization(row[TRANSFORMED_FIELDS_KEY][field], val_mean=np.mean(field_vals), val_stddev=np.std(field_vals))
             print('\t'.join([str(modified_row[field]) for field in output_fields]), file=output_stream)
