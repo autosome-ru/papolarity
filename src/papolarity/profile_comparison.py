@@ -1,6 +1,6 @@
 from sklearn.linear_model import LinearRegression
 import numpy as np
-from math import log
+from math import log2
 from collections import namedtuple
 
 WeigthedPoints = namedtuple('WeigthedPoints', ['xs', 'ys', 'weights'])
@@ -36,7 +36,7 @@ def slope_by_segment_counts(control_sums, experiment_sums, segmentation, log_mod
 
     num_segments = segmentation.num_segments
     if log_mode:
-        rate_transform = log
+        rate_transform = log2
     else:
         rate_transform = lambda x: x
     for (segment, control_segment_sum, experiment_segment_sum) in zip(segmentation.segments, control_sums, experiment_sums):
