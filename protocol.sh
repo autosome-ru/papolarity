@@ -140,7 +140,7 @@ done
 
 # 3.2.6. (supplementary step) Plot polarity score distribution for all samples on a single figure
 
-# Note: coverage_features/adjusted/all.tsv is not perfectly formatted - it has several identical columns. 
+# Note: coverage_features/adjusted/all.tsv is not perfectly formatted - it has several identical columns.
 # We use it for the only reason - to draw the plot.
 
 SAMPLE_FILES=$( echo $SAMPLES | xargs -n1 echo | xargs -n1 -I{} echo 'coverage_features/adjusted/{}.tsv' | tr '\n' ' ' )
@@ -232,6 +232,9 @@ done
 
 # 3.3.7. Plot per-sample distributions of slope
 
+# Note: plots are not proof-ready, typically you have to manually
+# specify `--xlim min max` to set proper scaling for slope and slopelog plot
+
 mkdir -p ./comparison/plot;
 for EXPERIMENT in $EXPERIMENTS; do
     papolarity plot_distribution \
@@ -261,14 +264,13 @@ for EXPERIMENT in $EXPERIMENTS; do
         --fields "${EXPERIMENT}_l1_distance" \
         --no-legend \
         --title 'Distribution of l1-distances' \
-        --zero-line green \
         --xlim 0 2 \
         --output-file "./comparison/plot/${EXPERIMENT}_l1_distance.png"
 done
 
 # 3.3.8. (supplementary step) Plot distributions of slopes distribution for all samples on a single figure
 
-# Note: comparison/adjusted/all.tsv is not perfectly formatted - it has several identical columns. 
+# Note: comparison/adjusted/all.tsv is not perfectly formatted - it has several identical columns.
 # We use it for the only reason - to draw the plot.
 
 SAMPLE_FILES=$( echo $EXPERIMENTS | xargs -n1 echo | xargs -n1 -I{} echo 'comparison/adjusted/{}.tsv' | tr '\n' ' ' )
@@ -278,7 +280,7 @@ csvtk --tabs join \
     $SAMPLE_FILES \
     --out-file comparison/adjusted/all.tsv;
 
-for FIELD in slope slopelog l1_distance; do
+for FIELD in slope slopelog; do
     SAMPLE_FIELDS=$( echo $EXPERIMENTS | xargs -n1 echo | xargs -n1 -I{} echo "{}_${FIELD}" | tr '\n' ' ' );
 
     papolarity plot_distribution \
@@ -289,3 +291,14 @@ for FIELD in slope slopelog l1_distance; do
         --zero-line green \
         --output-file "comparison/plot/all_${FIELD}.png";
 done
+
+FIELD=l1_distance
+SAMPLE_FIELDS_l1=$( echo $EXPERIMENTS | xargs -n1 echo | xargs -n1 -I{} echo "{}_l1_distance" | tr '\n' ' ' );
+
+papolarity plot_distribution \
+    "comparison/adjusted/all.tsv" \
+    --fields $SAMPLE_FIELDS_l1 \
+    --legend \
+    --title "l1-distance distributions" \
+    --xlim 0 2 \
+    --output-file "comparison/plot/all_l1_distance.png";
