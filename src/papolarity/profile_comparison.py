@@ -55,23 +55,8 @@ def slope_by_segment_counts(control_sums, experiment_sums, segmentation, log_mod
         center_info.ys.append(value)
         center_info.weights.append(1)
 
-        # mode: 'weighted_center'
-        weight = segment.stop - segment.start
-        weighted_center_info.xs.append(rel_coord)
-        weighted_center_info.ys.append(value)
-        weighted_center_info.weights.append(weight)
-
-        # mode: 'every_point'
-        for pos in range(segment.start, segment.stop):
-            rel_pos = pos / profile_len
-            every_point_info.xs.append(rel_pos)
-            every_point_info.ys.append(value)
-            every_point_info.weights.append(1)
-
     return {
         'center': slope_by_points(center_info.xs, center_info.ys, center_info.weights),
-        'weighted_center': slope_by_points(weighted_center_info.xs, weighted_center_info.ys, weighted_center_info.weights),
-        'every_point': slope_by_points(every_point_info.xs, every_point_info.ys, every_point_info.weights),
     }
 
 def slope_by_points(xs, ys, weights):
@@ -83,10 +68,11 @@ def slope_by_points(xs, ys, weights):
 def profile_difference(control_profile, experiment_profile, segmentation):
     control_sums = segmentwise_sums(segmentation, control_profile)
     experiment_sums = segmentwise_sums(segmentation, experiment_profile)
-    return profile_difference(control_sums, experiment_sums, segmentation, log_mode=log_mode)
-
-def profile_difference_by_segment_counts(control_sums, experiment_sums, segmentation):
     assert len(control_sums) == len(experiment_sums) == len(segmentation.segments)
+    return profile_difference_by_segment_counts(control_sums, experiment_sums)
+
+def profile_difference_by_segment_counts(control_sums, experiment_sums):
+    assert len(control_sums) == len(experiment_sums)
 
     control_profile_sum = np.sum(control_sums)
     experiment_profile_sum = np.sum(experiment_sums)
@@ -94,6 +80,6 @@ def profile_difference_by_segment_counts(control_sums, experiment_sums, segmenta
     control_normed = control_sums / control_profile_sum  if control_profile_sum != 0  else control_sums
     experiment_normed = experiment_sums / experiment_profile_sum  if experiment_profile_sum != 0  else experiment_sums
     difference = 0
-    for (segment, control_segment_sum, experiment_segment_sum) in zip(segmentation.segments, control_normed, experiment_normed):
+    for (control_segment_sum, experiment_segment_sum) in zip(control_normed, experiment_normed):
         difference += abs(control_segment_sum - experiment_segment_sum)
-    return difference / segmentation.segmentation_length
+    return difference

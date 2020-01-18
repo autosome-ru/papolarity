@@ -47,15 +47,10 @@ def invoke(args):
     experiment_coverages = TranscriptCoverage.each_in_file(args.coverage_experiment, header=False, dtype=int)
 
     with open_for_write(args.output_file) as output_stream:
-        feature_names = ['slope', 'weighted_slope', 'multipoint_slope', 'logslope', 'weighted_logslope', 'multipoint_logslope', 'profile_difference',]
+        feature_names = ['slope', 'logslope', 'profile_difference']
         prefixed_feature_names = [f'{args.prefix}{name}' for name in feature_names]
         header = ['transcript_id', *prefixed_feature_names]
         print('\t'.join(header), file=output_stream)
         for rec in compare_coverage_streams(segmentation_stream, control_coverages, experiment_coverages):
-            info = [
-                rec.transcript_id,
-                rec.slope, rec.weighted_slope, rec.multipoint_slope,
-                rec.logslope, rec.weighted_logslope, rec.multipoint_logslope,
-                rec.profile_difference,
-            ]
+            info = [rec.transcript_id, rec.slope, rec.logslope, rec.profile_difference]
             print('\t'.join(map(str, info)), file=output_stream)

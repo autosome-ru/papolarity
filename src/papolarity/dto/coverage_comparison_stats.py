@@ -6,11 +6,7 @@ from ..profile_comparison import profile_difference_by_segment_counts, slope_by_
 class CoverageComparisonStats(DataclassTsvSerializable):
     transcript_id: str
     slope: float
-    weighted_slope: float
-    multipoint_slope: float
     logslope: float
-    weighted_logslope: float
-    multipoint_logslope: float
     profile_difference: float
 
     @classmethod
@@ -24,11 +20,7 @@ class CoverageComparisonStats(DataclassTsvSerializable):
         info = {
             'transcript_id': transcript_id,
             'slope': slopes['center'],
-            'weighted_slope': slopes['weighted_center'],
-            'multipoint_slope': slopes['every_point'],
             'logslope': log_slopes['center'],
-            'weighted_logslope': log_slopes['weighted_center'],
-            'multipoint_logslope': log_slopes['every_point'],
-            'profile_difference': profile_difference_by_segment_counts(control_sums, experiment_sums, segmentation),
+            'profile_difference': profile_difference_by_segment_counts(control_sums, experiment_sums),
         }
         return cls(**info)
