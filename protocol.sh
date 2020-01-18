@@ -176,16 +176,16 @@ papolarity clip_cds \
     --contig-naming original \
     --output-file ./cds_segmentation.bed.gz
 
-# 3.3.3. (supplementary step) Flatten coverage profiles according to segmentation.
+# 3.3.3. (non-mandatory step) Generation of flattened coverage profiles.
 
-mkdir -p ./coverage_flattened;
+mkdir -p ./cds_coverage_flattened;
 (
   for SAMPLE in $SAMPLES; do
     echo papolarity flatten_coverage \
-                    ./segmentation.bed.gz \
-                    "./coverage/${SAMPLE}.bedgraph.gz" \
+                    ./cds_segmentation.bed.gz \
+                    "./cds_coverage/${SAMPLE}.bedgraph.gz" \
                     --only-matching \
-                    --output-file "./coverage_flattened/${SAMPLE}.bedgraph.gz";
+                    --output-file "./cds_coverage_flattened/${SAMPLE}.bedgraph.gz";
   done
 ) | parallel
 
@@ -239,20 +239,9 @@ mkdir -p ./comparison/plot;
 for EXPERIMENT in $EXPERIMENTS; do
     papolarity plot_distribution \
         "comparison/adjusted/${EXPERIMENT}.tsv" \
-        --fields "${EXPERIMENT}_slope" \
-        --no-legend \
-        --title 'Slope of ratios distribution' \
-        --zero-line green \
-        --xlim -100.0 100.0 \
-        --output-file "./comparison/plot/${EXPERIMENT}_slope.png"
-done
-
-for EXPERIMENT in $EXPERIMENTS; do
-    papolarity plot_distribution \
-        "comparison/adjusted/${EXPERIMENT}.tsv" \
         --fields "${EXPERIMENT}_slopelog" \
         --no-legend \
-        --title 'Slope of log-ratios distribution' \
+        --title $'Distribution of linear regression slope\nfor normalized coverage log-ratios' \
         --zero-line green \
         --xlim -10 10 \
         --output-file "./comparison/plot/${EXPERIMENT}_slopelog.png"
@@ -261,9 +250,20 @@ done
 for EXPERIMENT in $EXPERIMENTS; do
     papolarity plot_distribution \
         "comparison/adjusted/${EXPERIMENT}.tsv" \
+        --fields "${EXPERIMENT}_slope" \
+        --no-legend \
+        --title $'Distribution of linear regression slope\nfor normalized coverage ratios' \
+        --zero-line green \
+        --xlim -100 100 \
+        --output-file "./comparison/plot/${EXPERIMENT}_slope.png"
+done
+
+for EXPERIMENT in $EXPERIMENTS; do
+    papolarity plot_distribution \
+        "comparison/adjusted/${EXPERIMENT}.tsv" \
         --fields "${EXPERIMENT}_l1_distance" \
         --no-legend \
-        --title 'Distribution of l1-distances' \
+        --title $'Distribution of l1-distances\nbetween normalized coverage profiles' \
         --xlim 0 2 \
         --output-file "./comparison/plot/${EXPERIMENT}_l1_distance.png"
 done
@@ -280,25 +280,38 @@ csvtk --tabs join \
     $SAMPLE_FILES \
     --out-file comparison/adjusted/all.tsv;
 
-for FIELD in slope slopelog; do
-    SAMPLE_FIELDS=$( echo $EXPERIMENTS | xargs -n1 echo | xargs -n1 -I{} echo "{}_${FIELD}" | tr '\n' ' ' );
+SAMPLE_FIELDS_slopelog=$( echo $EXPERIMENTS | xargs -n1 echo | xargs -n1 -I{} echo "{}_slopelog" | tr '\n' ' ' );
 
-    papolarity plot_distribution \
-        "comparison/adjusted/all.tsv" \
-        --fields $SAMPLE_FIELDS \
-        --legend \
-        --title "${FIELD} distributions" \
-        --zero-line green \
-        --output-file "comparison/plot/all_${FIELD}.png";
-done
+papolarity plot_distribution \
+    "comparison/adjusted/all.tsv" \
+    --fields $SAMPLE_FIELDS_slopelog \
+    --labels $EXPERIMENTS \
+    --legend \
+    --title $'Distribution of linear regression slope\nfor normalized coverage log-ratios' \
+    --xlim -10 10 \
+    --zero-line green \
+    --output-file "comparison/plot/all_slopelog.png";
 
-FIELD=l1_distance
+SAMPLE_FIELDS_slope=$( echo $EXPERIMENTS | xargs -n1 echo | xargs -n1 -I{} echo "{}_slope" | tr '\n' ' ' );
+
+papolarity plot_distribution \
+    "comparison/adjusted/all.tsv" \
+    --fields $SAMPLE_FIELDS_slope \
+    --labels $EXPERIMENTS \
+    --legend \
+    --title $'Distribution of linear regression slope\nfor normalized coverage ratios' \
+    --xlim -100 100 \
+    --zero-line green \
+    --output-file "comparison/plot/all_slope.png";
+
+
 SAMPLE_FIELDS_l1=$( echo $EXPERIMENTS | xargs -n1 echo | xargs -n1 -I{} echo "{}_l1_distance" | tr '\n' ' ' );
 
 papolarity plot_distribution \
     "comparison/adjusted/all.tsv" \
     --fields $SAMPLE_FIELDS_l1 \
+    --labels $EXPERIMENTS \
     --legend \
-    --title "l1-distance distributions" \
+    --title $'Distribution of l1-distances\nbetween normalized coverage profiles' \
     --xlim 0 2 \
     --output-file "comparison/plot/all_l1_distance.png";
