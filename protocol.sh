@@ -241,7 +241,7 @@ for EXPERIMENT in $EXPERIMENTS; do
         "comparison/adjusted/${EXPERIMENT}.tsv" \
         --fields "${EXPERIMENT}_slope" \
         --no-legend \
-        --title 'Slope distribution' \
+        --title 'Slope of ratios distribution' \
         --zero-line green \
         --xlim -100.0 100.0 \
         --output-file "./comparison/plot/${EXPERIMENT}_slope.png"
@@ -252,7 +252,7 @@ for EXPERIMENT in $EXPERIMENTS; do
         "comparison/adjusted/${EXPERIMENT}.tsv" \
         --fields "${EXPERIMENT}_slopelog" \
         --no-legend \
-        --title 'Logarithmic slope distribution' \
+        --title 'Slope of log-ratios distribution' \
         --zero-line green \
         --xlim -10 10 \
         --output-file "./comparison/plot/${EXPERIMENT}_slopelog.png"
