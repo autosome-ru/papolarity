@@ -1,7 +1,7 @@
 import argparse
 from .version import __version__
 from .bin import get_coverage, pool_coverages, extract_cds_annotation, clip_cds, \
-                 coverage_features, join_tables, choose_best, \
+                 coverage_features, choose_best, \
                  compare_coverages, \
                  adjust, plot_distribution, \
                  flatten_coverage
@@ -18,7 +18,6 @@ def configure_argparser(argparser=None):
         {'cmd': 'extract_cds_annotation', 'namespace': extract_cds_annotation, 'help': 'Extract CDS annotation in transcriptomic coordinates from genomic annotation'},
         {'cmd': 'clip_cds', 'namespace': clip_cds, 'help': 'Clip any bed file in transcriptomic coordinates to CDS-region'},
         {'cmd': 'coverage_features', 'namespace': coverage_features, 'help': 'Calculate coverage profile features'},
-        {'cmd': 'join_tables', 'namespace': join_tables, 'help': 'Join the second table to the first one'},
         {'cmd': 'choose_best', 'namespace': choose_best, 'help': 'Choose best element from each group (e.g. best transcipt for each gene)'},
         {'cmd': 'compare_coverages', 'namespace': compare_coverages, 'help': 'Coverage profile comparison'},
         {'cmd': 'plot_distribution', 'namespace': plot_distribution, 'help': 'Plot distributions of features'},
