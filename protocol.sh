@@ -223,7 +223,7 @@ for EXPERIMENT in $EXPERIMENTS; do
     papolarity adjust_features \
         "comparison/filtered/${EXPERIMENT}.tsv" \
         --sort-field 'cds_length' \
-        --fields "${EXPERIMENT}_slope" "${EXPERIMENT}_logslope" "${EXPERIMENT}_discrepancy" \
+        --fields "${EXPERIMENT}_slope" "${EXPERIMENT}_slopelog" "${EXPERIMENT}_l1_distance" \
         --mode z-score \
         --window 500 \
         --prefix 'zscore_' \
@@ -247,23 +247,23 @@ done
 for EXPERIMENT in $EXPERIMENTS; do
     papolarity plot_distribution \
         "comparison/adjusted/${EXPERIMENT}.tsv" \
-        --fields "${EXPERIMENT}_logslope" \
+        --fields "${EXPERIMENT}_slopelog" \
         --no-legend \
         --title 'Logarithmic slope distribution' \
         --zero-line green \
         --xlim -10 10 \
-        --output-file "./comparison/plot/${EXPERIMENT}_logslope.png"
+        --output-file "./comparison/plot/${EXPERIMENT}_slopelog.png"
 done
 
 for EXPERIMENT in $EXPERIMENTS; do
     papolarity plot_distribution \
         "comparison/adjusted/${EXPERIMENT}.tsv" \
-        --fields "${EXPERIMENT}_discrepancy" \
+        --fields "${EXPERIMENT}_l1_distance" \
         --no-legend \
-        --title 'Distribution of discrepancies' \
+        --title 'Distribution of l1-distances' \
         --zero-line green \
         --xlim 0 2 \
-        --output-file "./comparison/plot/${EXPERIMENT}_discrepancy.png"
+        --output-file "./comparison/plot/${EXPERIMENT}_l1_distance.png"
 done
 
 # 3.3.8. (supplementary step) Plot distributions of slopes distribution for all samples on a single figure
@@ -278,7 +278,7 @@ csvtk --tabs join \
     $SAMPLE_FILES \
     --out-file comparison/adjusted/all.tsv;
 
-for FIELD in slope logslope discrepancy; do
+for FIELD in slope slopelog l1_distance; do
     SAMPLE_FIELDS=$( echo $EXPERIMENTS | xargs -n1 echo | xargs -n1 -I{} echo "{}_${FIELD}" | tr '\n' ' ' );
 
     papolarity plot_distribution \

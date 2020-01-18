@@ -65,13 +65,13 @@ def slope_by_points(xs, ys, weights):
     model.fit(xs.reshape(-1, 1), ys, sample_weight=weights)
     return model.coef_[0]
 
-def discrepancy(control_profile, experiment_profile, segmentation):
+def l1_distance(control_profile, experiment_profile, segmentation):
     control_sums = segmentwise_sums(segmentation, control_profile)
     experiment_sums = segmentwise_sums(segmentation, experiment_profile)
     assert len(control_sums) == len(experiment_sums) == len(segmentation.segments)
-    return discrepancy_by_segment_counts(control_sums, experiment_sums)
+    return l1_distance_by_segment_counts(control_sums, experiment_sums)
 
-def discrepancy_by_segment_counts(control_sums, experiment_sums):
+def l1_distance_by_segment_counts(control_sums, experiment_sums):
     assert len(control_sums) == len(experiment_sums)
 
     control_profile_sum = np.sum(control_sums)
