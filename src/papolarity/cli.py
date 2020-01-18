@@ -4,7 +4,7 @@ from .bin import get_coverage, pool_coverage, cds_annotation, clip_cds, \
                  coverage_features, choose_best, \
                  compare_coverage, \
                  adjust_features, plot_distribution, \
-                 flatten_coverage
+                 flatten_coverage, cds_sequence
 
 def configure_argparser(argparser=None):
     if not argparser:
@@ -23,6 +23,7 @@ def configure_argparser(argparser=None):
         {'cmd': 'plot_distribution', 'namespace': plot_distribution, 'help': 'Plot distributions of features'},
         {'cmd': 'adjust_features', 'namespace': adjust_features, 'help': 'Make length-dependend adjustment of features'},
         {'cmd': 'flatten_coverage', 'namespace': flatten_coverage, 'help': 'Flatten coverage profiles by averaging data through given segments'},
+        {'cmd': 'cds_sequence', 'namespace': cds_sequence, 'help': 'Extract CDS sequences from GTF annotation and genome assembly'},
     ]
     for subparser_config in subparser_configs:
         invocation_fn = subparser_config['namespace'].invoke
