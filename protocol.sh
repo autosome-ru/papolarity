@@ -245,7 +245,6 @@ for EXPERIMENT_BN in $EXPERIMENT_BNS; do
         --output-file "./comparison/plot/${EXPERIMENT_BN}_slope.png"
 done
 
-mkdir -p ./comparison/plot;
 for EXPERIMENT_BN in $EXPERIMENT_BNS; do
     papolarity plot_distribution \
         "comparison/adjusted/${EXPERIMENT_BN}.tsv" \
@@ -257,7 +256,6 @@ for EXPERIMENT_BN in $EXPERIMENT_BNS; do
         --output-file "./comparison/plot/${EXPERIMENT_BN}_logslope.png"
 done
 
-mkdir -p ./comparison/plot;
 for EXPERIMENT_BN in $EXPERIMENT_BNS; do
     papolarity plot_distribution \
         "comparison/adjusted/${EXPERIMENT_BN}.tsv" \
@@ -266,7 +264,7 @@ for EXPERIMENT_BN in $EXPERIMENT_BNS; do
         --title 'Distribution of discrepancies' \
         --zero-line green \
         --xlim 0 2 \
-        --output-file "./comparison/plot/${EXPERIMENT_BN}_logslope.png"
+        --output-file "./comparison/plot/${EXPERIMENT_BN}_discrepancy.png"
 done
 
 # 3.3.8. (supplementary step) Plot distributions of slopes distribution for all samples on a single figure
