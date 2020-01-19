@@ -1,31 +1,59 @@
 #!/usr/bin/env bash
 
-SAMPLES='ES_noHR_noCH_ribo  ES_noHR_60sCH_ribo  ES_90sHR_60sCH_ribo  ES_120sHR_60sCH_ribo  ES_150sHR_60sCH_ribo  ES_180sHR_60sCH_ribo';
+# # Papolarity tools itself has no implicit dependencies, and no conventions about a structure of folders and file name
+# #   and have a few conventions about file extensions (see README).
+# # Thus all data necessary to run the command is specified in its arguments.
+# # Feel free to change any part of protocol for your needs. Steps are named after paper sections.
+# #
+# # Nevertheless, this implementation of protocol relies on and maintains a certain file layout.
+# # To start it, you should have genome annotation in GTF/GFF format (its name is specified in ANNOTATION variable)
+# #   and a set of bam-files with alignment of reads in samples.
+# # Alignments should be located at ./align/{SampleName}.bam
+# # Sample names should be provided in SAMPLES, CONTROL and EXPERIMENTS variables.
+# # If you don't want to compare samples, CONTROL and EXPERIMENTS aren't necessary
+# #   (technically, steps before 3.3.4 don't need them).
+# # If it's the case, specify SAMPLES explicitly and comment out steps in a section 3.3.*
+# #
+# # This pipeline uses several auxiliary tools: GNU parallel, csvtk and python package pasio.
+
+
+CONTROL='ES_noHR_noCH_ribo';
+EXPERIMENTS='ES_noHR_60sCH_ribo  ES_90sHR_60sCH_ribo  ES_120sHR_60sCH_ribo  ES_150sHR_60sCH_ribo  ES_180sHR_60sCH_ribo';
+SAMPLES="$CONTROL $EXPERIMENTS";
+# SAMPLES='ES_noHR_noCH_ribo  ES_noHR_60sCH_ribo  ES_90sHR_60sCH_ribo  ES_120sHR_60sCH_ribo  ES_150sHR_60sCH_ribo  ES_180sHR_60sCH_ribo';
+
+ANNOTATION='./genome/gencode.vM23.basic.annotation.gtf'
+
+DROP_5_FLANK=30
+DROP_3_FLANK=30
 
 # 3.1. Common preprocessing
+echo '=== 3.1. Common preprocessing ==='
 
 # 3.1.1. Preprocessing transcripts annotation
+echo '3.1.1. Preprocessing transcripts annotation'
 
+mkdir -p ./genome;
 papolarity cds_annotation \
-    ./genome/gencode.vM23.basic.annotation.gtf \
+    "$ANNOTATION" \
     --attr-filter transcript_type=protein_coding \
     --attr-filter gene_type=protein_coding \
-    --output-file ./genome/gencode.vM23.cds_features.tsv
+    --output-file ./genome/cds_features.tsv
 
-
-csvtk --tabs cut genome/gencode.vM23.cds_features.tsv \
+csvtk --tabs cut ./genome/cds_features.tsv \
                  --fields 'transcript_id,transcript_length,cds_length' \
-                 --out-file genome/transcript_lengths.tsv
+                 --out-file ./genome/transcript_lengths.tsv
 
-csvtk --tabs cut genome/gencode.vM23.cds_features.tsv \
+csvtk --tabs cut ./genome/cds_features.tsv \
                  --fields 'transcript_id,gene_id' \
-                 --out-file genome/transcript2gene.tsv
+                 --out-file ./genome/transcript2gene.tsv
 
 
 
 # 3.1.2. Preparing coverage profiles
+echo '3.1.2. Preparing coverage profiles'
 
-mkdir -p ./coverage/;
+mkdir -p ./coverage;
 (
   for SAMPLE in $SAMPLES; do
     echo papolarity get_coverage "./align/${SAMPLE}.bam" \
@@ -36,19 +64,21 @@ mkdir -p ./coverage/;
 
 
 # 3.1.3. Pooling coverage profiles
+echo '3.1.3. Pooling coverage profiles'
 
 papolarity pool_coverage ./coverage/*.bedgraph.gz --dtype int --output-file ./coverage/pooled.bedgraph.gz;
 
 
 # 3.1.4. Clipping profiles withing coding segments
+echo '3.1.4. Clipping profiles withing coding segments'
 
 mkdir -p ./cds_coverage;
 (
   for SAMPLE in $SAMPLES 'pooled'; do
     echo papolarity clip_cds \
-                    ./genome/gencode.vM23.cds_features.tsv \
+                    ./genome/cds_features.tsv \
                     "./coverage/${SAMPLE}.bedgraph.gz" \
-                    --drop-5-flank 15  --drop-3-flank 15 \
+                    --drop-5-flank $DROP_5_FLANK  --drop-3-flank $DROP_3_FLANK \
                     --contig-naming original \
                     --output-file "./cds_coverage/${SAMPLE}.bedgraph.gz" ;
   done
@@ -58,8 +88,10 @@ mkdir -p ./cds_coverage;
 #################################################
 
 # 3.2. Polarity score estimation
+echo '=== 3.2. Polarity score estimation ==='
 
 # 3.2.1. Estimating polarity scores
+echo '3.2.1. Estimating polarity scores'
 
 mkdir -p ./coverage_features/raw;
 (
@@ -73,6 +105,8 @@ mkdir -p ./coverage_features/raw;
 
 
 # 3.2.2. Filtering transcript lists
+echo '3.2.2. Filtering transcript lists'
+
 mkdir -p ./coverage_features/pooled
 csvtk --tabs filter2 \
    "coverage_features/raw/pooled.tsv" \
@@ -101,6 +135,7 @@ csvtk --tabs cut \
 
 
 # 3.2.3. Finalizing the polarity score lists
+echo '3.2.3. Finalizing the polarity score lists'
 
 mkdir -p ./coverage_features/filtered;
 for SAMPLE in $SAMPLES; do
@@ -111,6 +146,7 @@ for SAMPLE in $SAMPLES; do
 done
 
 # 3.2.4. Polarity Z-score estimation
+echo '3.2.4. Polarity Z-score estimation'
 
 mkdir -p ./coverage_features/adjusted;
 for SAMPLE in $SAMPLES; do
@@ -125,6 +161,7 @@ for SAMPLE in $SAMPLES; do
 done
 
 # 3.2.5. Plot per-sample polarity score distribution
+echo '3.2.5. Plot per-sample polarity score distribution'
 
 mkdir -p ./coverage_features/plot/;
 for SAMPLE in $SAMPLES; do
@@ -139,22 +176,23 @@ for SAMPLE in $SAMPLES; do
 done
 
 # 3.2.6. (supplementary step) Plot polarity score distribution for all samples on a single figure
+echo '3.2.6. (supplementary step) Plot polarity score distribution for all samples on a single figure'
 
 # Note: coverage_features/adjusted/all.tsv is not perfectly formatted - it has several identical columns.
 # We use it for the only reason - to draw the plot.
 
-SAMPLE_FILES=$( echo $SAMPLES | xargs -n1 echo | xargs -n1 -I{} echo 'coverage_features/adjusted/{}.tsv' | tr '\n' ' ' )
+SAMPLE_FILES_adjusted_features=$( echo $SAMPLES | xargs -n1 echo | xargs -n1 -I{} echo 'coverage_features/adjusted/{}.tsv' | tr '\n' ' ' )
 
 csvtk --tabs join \
     ./transcripts_list.tsv \
-    $SAMPLE_FILES \
+    $SAMPLE_FILES_adjusted_features \
     --out-file coverage_features/adjusted/all.tsv;
 
-SAMPLE_FIELDS=$( echo $SAMPLES | xargs -n1 echo | xargs -n1 -I{} echo '{}_polarity' | tr '\n' ' ' );
+SAMPLE_FIELDS_polarity=$( echo $SAMPLES | xargs -n1 echo | xargs -n1 -I{} echo '{}_polarity' | tr '\n' ' ' );
 
 papolarity plot_distribution \
     "coverage_features/adjusted/all.tsv" \
-    --fields $SAMPLE_FIELDS \
+    --fields $SAMPLE_FIELDS_polarity \
     --legend \
     --title "Polarity distributions" \
     --zero-line green \
@@ -163,20 +201,26 @@ papolarity plot_distribution \
 
 #######################################################
 
+# 3.3. Relative slope estimation
+echo '=== 3.3. Relative slope estimation ==='
+
 # 3.3.1. Segmentation of coverage profiles
+echo '3.3.1. Segmentation of coverage profiles'
 
 pasio ./coverage/pooled.bedgraph.gz --output-file ./segmentation.bed.gz --output-mode bed
 
 # 3.3.2. Clip segmentation
+echo '3.3.2. Clip segmentation'
 
 papolarity clip_cds \
-    ./genome/gencode.vM23.cds_features.tsv  \
+    ./genome/cds_features.tsv  \
     ./segmentation.bed.gz  \
-    --drop-5-flank 15  --drop-3-flank 15 \
+    --drop-5-flank $DROP_5_FLANK  --drop-3-flank $DROP_3_FLANK \
     --contig-naming original \
     --output-file ./cds_segmentation.bed.gz
 
 # 3.3.3. (non-mandatory step) Generation of flattened coverage profiles.
+echo '3.3.3. (non-mandatory step) Generation of flattened coverage profiles.'
 
 mkdir -p ./cds_coverage_flattened;
 (
@@ -189,10 +233,19 @@ mkdir -p ./cds_coverage_flattened;
   done
 ) | parallel
 
-# 3.3.4. Calculate slope for a pair of samples.
+mkdir -p ./coverage_flattened;
+(
+  for SAMPLE in $SAMPLES 'pooled'; do
+    echo papolarity flatten_coverage \
+                    ./segmentation.bed.gz \
+                    "./coverage/${SAMPLE}.bedgraph.gz" \
+                    --only-matching \
+                    --output-file "./coverage_flattened/${SAMPLE}.bedgraph.gz";
+  done
+) | parallel
 
-CONTROL='ES_noHR_noCH_ribo';
-EXPERIMENTS='ES_noHR_60sCH_ribo  ES_90sHR_60sCH_ribo  ES_120sHR_60sCH_ribo  ES_150sHR_60sCH_ribo  ES_180sHR_60sCH_ribo';
+# 3.3.4. Calculate slope for a pair of samples.
+echo '3.3.4. Calculate slope for a pair of samples.'
 
 mkdir -p ./comparison/raw;
 (
@@ -207,6 +260,7 @@ mkdir -p ./comparison/raw;
 ) | parallel
 
 # 3.3.5. Finalizing profile comparison statistics
+echo '3.3.5. Finalizing profile comparison statistics'
 
 mkdir -p ./comparison/filtered;
 for EXPERIMENT in $EXPERIMENTS; do
@@ -217,6 +271,7 @@ for EXPERIMENT in $EXPERIMENTS; do
 done
 
 # 3.3.6. Adjust comparison statistics
+echo '3.3.6. Adjust comparison statistics'
 
 mkdir -p ./comparison/adjusted;
 for EXPERIMENT in $EXPERIMENTS; do
@@ -231,6 +286,7 @@ for EXPERIMENT in $EXPERIMENTS; do
 done
 
 # 3.3.7. Plot per-sample distributions of slope
+echo '3.3.7. Plot per-sample distributions of slope'
 
 # Note: plots are not proof-ready, typically you have to manually
 # specify `--xlim min max` to set proper scaling for slope and slopelog plot
@@ -269,15 +325,16 @@ for EXPERIMENT in $EXPERIMENTS; do
 done
 
 # 3.3.8. (supplementary step) Plot distributions of slopes distribution for all samples on a single figure
+echo '3.3.8. (supplementary step) Plot distributions of slopes distribution for all samples on a single figure'
 
 # Note: comparison/adjusted/all.tsv is not perfectly formatted - it has several identical columns.
 # We use it for the only reason - to draw the plot.
 
-SAMPLE_FILES=$( echo $EXPERIMENTS | xargs -n1 echo | xargs -n1 -I{} echo 'comparison/adjusted/{}.tsv' | tr '\n' ' ' )
+SAMPLE_FILES_adjusted_comparison=$( echo $EXPERIMENTS | xargs -n1 echo | xargs -n1 -I{} echo 'comparison/adjusted/{}.tsv' | tr '\n' ' ' )
 
 csvtk --tabs join \
     ./transcripts_list.tsv \
-    $SAMPLE_FILES \
+    $SAMPLE_FILES_adjusted_comparison \
     --out-file comparison/adjusted/all.tsv;
 
 SAMPLE_FIELDS_slopelog=$( echo $EXPERIMENTS | xargs -n1 echo | xargs -n1 -I{} echo "{}_slopelog" | tr '\n' ' ' );
