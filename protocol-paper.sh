@@ -207,7 +207,7 @@ echo '=== 3.3. Relative slope estimation ==='
 # 3.3.1. Segmentation of coverage profiles
 echo '3.3.1. Segmentation of coverage profiles'
 
-pasio ./coverage/pooled.bedgraph.gz --output-file ./segmentation.bed.gz --output-mode bed
+pasio ./coverage/pooled.bedgraph.gz --alpha 1 --beta 1 --output-file ./segmentation.bed.gz --output-mode bed
 
 # 3.3.2. Clip segmentation
 echo '3.3.2. Clip segmentation'
