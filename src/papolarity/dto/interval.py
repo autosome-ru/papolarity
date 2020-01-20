@@ -1,6 +1,7 @@
 import dataclasses
 from typing import List, Any
 from .dataclass_tsv_serializable import DataclassTsvSerializable
+from ..utils import tsv_string_empty_none
 
 @dataclasses.dataclass(order=True, frozen=True)
 class Interval(DataclassTsvSerializable):
@@ -29,7 +30,7 @@ class Interval(DataclassTsvSerializable):
 
     def tsv_string(self):
         fields = [self.chrom, self.start, self.stop, *self.rest]
-        return '\t'.join(map(str, fields))
+        return tsv_string_empty_none(fields)
 
     @property
     def length(self):

@@ -1,6 +1,7 @@
 import argparse
 import numpy as np
 from ..gzip_utils import open_for_write
+from ..utils import tsv_string_empty_none
 from ..dto.transcript_coverage import TranscriptCoverage
 from ..polarity_score import polarity_score
 
@@ -33,4 +34,4 @@ def invoke(args):
             polarity = polarity_score(coverage)
 
             info = [transcript_id, mean_coverage, total_coverage, polarity]
-            print('\t'.join(map(str, info)), file=output_stream)
+            print(tsv_string_empty_none(info), file=output_stream)
