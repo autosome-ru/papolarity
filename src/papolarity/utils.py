@@ -9,6 +9,9 @@ def flatten(xs):
             result.append(x)
     return result
 
+def drop_none(xs):
+    return [x for x in xs if x is not None]
+
 def take_the_only(arr):
     if len(arr) > 1:
         raise Exception('Several elements when the only one is expected')

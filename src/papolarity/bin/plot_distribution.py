@@ -2,6 +2,7 @@ import argparse
 import seaborn as sns
 import matplotlib.pyplot as plt
 from ..tsv_reader import each_in_tsv
+from ..utils import drop_none
 
 def configure_argparser(argparser=None):
     if not argparser:
@@ -28,7 +29,7 @@ def main():
     invoke(args)
 
 def invoke(args):
-    dtype = float
+    dtype = lambda x: float(x) if x != '' else None
     data = list(each_in_tsv(args.table))
 
     fields = args.fields
@@ -54,7 +55,7 @@ def invoke(args):
     
     for (field, label) in zip(fields, labels):
         values = [row[field] for row in data]
-        sns.kdeplot(values, label = label, gridsize=10000, clip=args.xlim,)
+        sns.kdeplot(drop_none(values), label = label, gridsize=10000, clip=args.xlim,)
 
     if args.xlim:
         plt.xlim(*args.xlim)
