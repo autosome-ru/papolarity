@@ -1,5 +1,5 @@
 import argparse
-from ..utils import common_subsequence
+from ..utils import common_subsequence, tsv_string_empty_none
 from ..gzip_utils import open_for_write
 from ..dto.transcript_coverage import TranscriptCoverage
 from ..segmentation import Segmentation
@@ -53,5 +53,4 @@ def invoke(args):
         print('\t'.join(header), file=output_stream)
         for rec in compare_coverage_streams(segmentation_stream, control_coverage_profiles, experiment_coverage_profiles):
             info = [rec.transcript_id, rec.slope, rec.slopelog, rec.l1_distance]
-            info_strings = [(str(x) if x is not None else '') for x in info]
-            print('\t'.join(info_strings), file=output_stream)
+            print(tsv_string_empty_none(info), file=output_stream)

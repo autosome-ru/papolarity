@@ -12,6 +12,10 @@ def flatten(xs):
 def drop_none(xs):
     return [x for x in xs if x is not None]
 
+def tsv_string_empty_none(row):
+    row_strings = [(str(value) if value is not None else '') for value in row]
+    return '\t'.join(row_strings)
+
 def take_the_only(arr):
     if len(arr) > 1:
         raise Exception('Several elements when the only one is expected')
