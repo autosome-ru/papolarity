@@ -12,7 +12,7 @@ The package is organized as a single entry point for a set of subcommands.
 
 You can run it with: `papolarity [arguments]` or `python -m papolarity [arguments]` if you need to specify a certain version of python to run a package.
 
-Note that at a moment only Python 3.7 is supported; probably this restriction will be relaxed later. Python 3.8 is not supported yet because pybedtools (which is necessary for some steps) can't be compiled for that version of python.
+Note that at a moment only Python 3.7 is supported; probably this restriction will be relaxed later. Python 3.8 is not supported yet because pysam (dependency of pybedtools which is necessary for some steps) can't be compiled for that version of python.
 
 There are no conventions about a structure of folders and file names. All files that are used by tool are always specified in command line arguments.
 

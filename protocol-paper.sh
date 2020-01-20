@@ -27,6 +27,9 @@ ANNOTATION='./genome/gencode.vM23.basic.annotation.gtf'
 DROP_5_FLANK=30
 DROP_3_FLANK=30
 
+# Genome is necessary only if you want to generate clipped-CDS sequences (step X.1.1)
+GENOME='./genome/GRCm38.primary_assembly.genome.fa'
+
 # 3.1. Common preprocessing
 echo '=== 3.1. Common preprocessing ==='
 
@@ -372,3 +375,16 @@ papolarity plot_distribution \
     --title $'Distribution of l1-distances\nbetween normalized coverage profiles' \
     --xlim 0 2 \
     --output-file "comparison/plot/all_l1_distance.png";
+
+################################################################################
+
+# X.1.1. Supplementary step: generate CDS sequences
+echo 'X.1.1. Supplementary step: generate CDS sequences'
+
+papolarity cds_sequence "$ANNOTATION" \
+                        "$GENOME" \
+                        --attr-filter "transcript_type=protein_coding" \
+                        --attr-filter "gene_type=protein_coding" \
+                        --region-type cds \
+                        --drop-5-flank $DROP_5_FLANK --drop-3-flank $DROP_3_FLANK \
+                        --output-file cds_sequences.fa.gz
