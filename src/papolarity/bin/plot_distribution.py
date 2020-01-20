@@ -54,7 +54,7 @@ def invoke(args):
     
     for (field, label) in zip(fields, labels):
         values = [row[field] for row in data]
-        sns.kdeplot(values, label = label)
+        sns.kdeplot(values, label = label, gridsize=10000, clip=args.xlim,)
 
     if args.xlim:
         plt.xlim(*args.xlim)
