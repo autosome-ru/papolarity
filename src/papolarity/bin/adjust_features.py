@@ -2,14 +2,40 @@ import argparse
 import numpy as np
 from ..gzip_utils import open_for_write
 from ..tsv_reader import each_in_tsv
+from .. import utils
 
-def sliding_row_with_window(arr, size):
-    for idx in range(0, size // 2):
-        yield (arr[idx], arr[0:size])
-    for idx in range(size // 2, len(arr) - size // 2):
-        yield (arr[idx], arr[(idx - size // 2):(idx - size // 2 + size)])
-    for idx in range(len(arr) - size // 2, len(arr)):
-        yield (arr[idx], arr[-size:])
+def window_around_idx(arr, idx, window_size, drop_none=False):
+    if drop_none:
+        left_part = utils.drop_none(arr[:idx])
+        element = arr[idx]
+        right_part = utils.drop_none(arr[idx + 1:])
+
+        if element is not None:
+            arr = left_part + [element] + right_part
+        else:
+            arr = left_part + right_part
+        idx = len(left_part)
+
+    half_window_size = window_size // 2
+    if idx < half_window_size:
+        return arr[0:window_size]
+    elif idx - half_window_size + window_size <= len(arr):
+        return arr[(idx - half_window_size):(idx - half_window_size + window_size)]
+    else:
+        return arr[-window_size:]
+
+def standardize_values(values, standardization, window_size, drop_none=True):
+    standardized_values = []
+    for (idx, val) in enumerate(values):
+        window_values = window_around_idx(values, idx, window_size, drop_none=drop_none)
+        mean = np.mean(window_values)
+        stddev = np.std(window_values)
+        if val is not None:
+            standardized_value = standardization(val, val_mean=mean, val_stddev=stddev)
+            standardized_values.append(standardized_value)
+        else:
+            standardized_values.append(None)
+    return standardized_values
 
 # stddev --> 1
 def standardize_stddev(val, val_mean, val_stddev):
@@ -52,6 +78,7 @@ def invoke(args):
     else:
         raise ValueError(f'Unknown mode `{args.mode}`')
 
+    dtype = lambda x: float(x) if x != '' else None
     data = list(each_in_tsv(args.table))
 
     fields = list(data[0].keys())
@@ -60,20 +87,22 @@ def invoke(args):
         row[TRANSFORMED_FIELDS_KEY] = {}
         for field in [args.sorting_field, *args.fields_to_correct]:
             # we don't want to modify original values because type conversion can screw integer values during output
-            row[TRANSFORMED_FIELDS_KEY][field] = float(row[field])
-    data.sort(key=lambda info: info[TRANSFORMED_FIELDS_KEY][args.sorting_field])
+            row[TRANSFORMED_FIELDS_KEY][field] = dtype(row[field])
+    data.sort(key=lambda info: dtype(info[args.sorting_field]))
 
-    output_fields = fields[:]
+    modified_data = [row.copy() for row in data]
+    output_field_names = fields[:]
+
     for field in args.fields_to_correct:
-        output_fields.append(f'{args.prefix}{field}')
+        output_field_name = f'{args.prefix}{field}'
+        output_field_names.append(output_field_name)
+        field_values = [dtype(row[field]) for row in data]
+        standardized_field_values = standardize_values(field_values, standardization, args.window_size, drop_none=True)
+        for idx in range(len(data)):
+            modified_data[idx][output_field_name] = standardized_field_values[idx]
 
     with open_for_write(args.output_file) as output_stream:
-        print('\t'.join(output_fields), file=output_stream)
-        for row, window in sliding_row_with_window(data, args.window_size):
-            modified_row = dict(row)
-            for field in args.fields_to_correct:
-                field_vals = [window_row[TRANSFORMED_FIELDS_KEY][field] for window_row in window]
-                modified_row[f'{args.prefix}{field}'] = standardization(row[TRANSFORMED_FIELDS_KEY][field], val_mean=np.mean(field_vals), val_stddev=np.std(field_vals))
-            output_values = [modified_row[field] for field in output_fields]
-            output_strings = [(str(value) if value is not None else '') for value in output_values]
-            print('\t'.join(output_strings), file=output_stream)
+        print('\t'.join(output_field_names), file=output_stream)
+        for row in modified_data:
+            output_values = [row[field] for field in output_field_names]
+            print(utils.tsv_string_empty_none(output_values), file=output_stream)
