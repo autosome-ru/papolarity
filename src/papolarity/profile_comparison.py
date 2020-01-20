@@ -26,6 +26,8 @@ def slope_by_profiles(control_profile, experiment_profile, segmentation, log_mod
 def slope_by_segment_counts(control_sums, experiment_sums, segmentation, log_mode=False):
     total_coverage_control = np.sum(control_sums)
     total_coverage_experiment = np.sum(experiment_sums)
+    if (total_coverage_control == 0) or (total_coverage_experiment ==0):
+        return {'center': None}
 
     assert len(segmentation.segments) == len(control_sums) == len(experiment_sums)
     profile_len = segmentation.segmentation_length
@@ -40,11 +42,14 @@ def slope_by_segment_counts(control_sums, experiment_sums, segmentation, log_mod
     else:
         rate_transform = lambda x: x
     for (segment, control_segment_sum, experiment_segment_sum) in zip(segmentation.segments, control_sums, experiment_sums):
-        mean_control = control_segment_sum / segment.length
-        mean_experiment = experiment_segment_sum / segment.length
-        normalized_mean_control = (mean_control + 1) / (total_coverage_control + num_segments)
-        normalized_mean_experiment = (mean_experiment + 1) / (total_coverage_experiment + num_segments)
-        detrended_profile = normalized_mean_experiment / normalized_mean_control
+        if (control_segment_sum == 0) and (experiment_segment_sum == 0):
+            continue
+
+        # We add pseudocount of 1 to each total coverage of each segment
+        mean_control = (control_segment_sum + 1) / (total_coverage_control + num_segments)
+        mean_experiment = (experiment_segment_sum + 1) / (total_coverage_experiment + num_segments)
+        detrended_profile = mean_experiment / mean_control
+
         value = rate_transform(detrended_profile)
 
         coord = (segment.start + segment.stop - 1) / 2
@@ -60,6 +65,8 @@ def slope_by_segment_counts(control_sums, experiment_sums, segmentation, log_mod
     }
 
 def slope_by_points(xs, ys, weights):
+    if len(xs) < 2:
+        return None
     xs = np.array(xs)
     model = LinearRegression()
     model.fit(xs.reshape(-1, 1), ys, sample_weight=weights)
@@ -73,13 +80,10 @@ def l1_distance(control_profile, experiment_profile, segmentation):
 
 def l1_distance_by_segment_counts(control_sums, experiment_sums):
     assert len(control_sums) == len(experiment_sums)
-
     control_profile_sum = np.sum(control_sums)
     experiment_profile_sum = np.sum(experiment_sums)
-
-    control_normed = control_sums / control_profile_sum  if control_profile_sum != 0  else control_sums
-    experiment_normed = experiment_sums / experiment_profile_sum  if experiment_profile_sum != 0  else experiment_sums
-    difference = 0
-    for (control_segment_sum, experiment_segment_sum) in zip(control_normed, experiment_normed):
-        difference += abs(control_segment_sum - experiment_segment_sum)
-    return difference
+    if (control_profile_sum == 0) or (experiment_profile_sum == 0):
+        return None
+    control_normed = control_sums / control_profile_sum
+    experiment_normed = experiment_sums / experiment_profile_sum
+    return np.sum(np.abs(control_normed - experiment_normed))
