@@ -74,4 +74,6 @@ def invoke(args):
             for field in args.fields_to_correct:
                 field_vals = [window_row[TRANSFORMED_FIELDS_KEY][field] for window_row in window]
                 modified_row[f'{args.prefix}{field}'] = standardization(row[TRANSFORMED_FIELDS_KEY][field], val_mean=np.mean(field_vals), val_stddev=np.std(field_vals))
-            print('\t'.join([str(modified_row[field]) for field in output_fields]), file=output_stream)
+            output_values = [modified_row[field] for field in output_fields]
+            output_strings = [(str(value) if value is not None else '') for value in output_values]
+            print('\t'.join(output_strings), file=output_stream)

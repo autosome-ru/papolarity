@@ -53,4 +53,5 @@ def invoke(args):
         print('\t'.join(header), file=output_stream)
         for rec in compare_coverage_streams(segmentation_stream, control_coverage_profiles, experiment_coverage_profiles):
             info = [rec.transcript_id, rec.slope, rec.slopelog, rec.l1_distance]
-            print('\t'.join(map(str, info)), file=output_stream)
+            info_strings = [(str(x) if x is not None else '') for x in info]
+            print('\t'.join(info_strings), file=output_stream)
