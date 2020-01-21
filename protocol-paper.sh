@@ -15,6 +15,8 @@
 # # If it's the case, specify SAMPLES explicitly and comment out steps in a section 3.3.*
 # #
 # # This pipeline uses several auxiliary tools: GNU parallel, csvtk and python package pasio.
+# # You can find installation instructions in ./protocol-paper-installation.sh
+# # To obtain data we used in a paper, follow ./protocol-paper-obtain-data.sh
 
 
 CONTROL='ES_noHR_noCH_ribo';
