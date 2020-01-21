@@ -281,7 +281,7 @@ for EXPERIMENT in $EXPERIMENTS; do
     papolarity adjust_features \
         "comparison/filtered/${EXPERIMENT}.tsv" \
         --sort-field 'cds_length' \
-        --fields "${EXPERIMENT}_slope" "${EXPERIMENT}_slopelog" "${EXPERIMENT}_l1_distance" \
+        --fields "${EXPERIMENT}_slope" "${EXPERIMENT}_slopelog" "${EXPERIMENT}_l1_distance" "${EXPERIMENT}_polarity_diff" \
         --mode z-score \
         --window 500 \
         --prefix 'zscore_' \
@@ -325,6 +325,17 @@ for EXPERIMENT in $EXPERIMENTS; do
         --title $'Distribution of l1-distances\nbetween normalized coverage profiles' \
         --xlim 0 2 \
         --output-file "./comparison/plot/${EXPERIMENT}_l1_distance.png"
+done
+
+
+for EXPERIMENT in $EXPERIMENTS; do
+    papolarity plot_distribution \
+        "comparison/adjusted/${EXPERIMENT}.tsv" \
+        --fields "${EXPERIMENT}_polarity_diff" \
+        --no-legend \
+        --title $'Distribution of polarity differences\nbetween experiment and control coverage profiles' \
+        --xlim -2 2 \
+        --output-file "./comparison/plot/${EXPERIMENT}_polarity_diff.png"
 done
 
 # 3.3.8. (supplementary step) Plot distributions of slopes distribution for all samples on a single figure
@@ -376,6 +387,17 @@ papolarity plot_distribution \
     --xlim 0 2 \
     --output-file "comparison/plot/all_l1_distance.png";
 
+
+SAMPLE_FIELDS_polarity_diff=$( echo $EXPERIMENTS | xargs -n1 echo | xargs -n1 -I{} echo "{}_polarity_diff" | tr '\n' ' ' );
+
+papolarity plot_distribution \
+    "comparison/adjusted/all.tsv" \
+    --fields $SAMPLE_FIELDS_polarity_diff \
+    --labels $EXPERIMENTS \
+    --legend \
+    --title $'Distribution of polarity differences\nbetween experiment and control coverage profiles' \
+    --xlim -2 2 \
+    --output-file "comparison/plot/all_polarity_diff.png";
 ################################################################################
 
 # X.1.1. Supplementary step: generate CDS sequences

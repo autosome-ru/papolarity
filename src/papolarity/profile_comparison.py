@@ -2,8 +2,16 @@ from sklearn.linear_model import LinearRegression
 import numpy as np
 from math import log2
 from collections import namedtuple
+from .polarity_score import polarity_score
 
 WeigthedPoints = namedtuple('WeigthedPoints', ['xs', 'ys', 'weights'])
+
+def polarity_diff(control_profile, experiment_profile):
+    control_polarity = polarity_score(control_profile)
+    exp_polarity = polarity_score(experiment_profile)
+    if (exp_polarity is None) or (control_polarity is None):
+        return None
+    return exp_polarity - control_polarity
 
 def segmentation_stops(segmentation):
     stops = [s.start for s in segmentation.segments]

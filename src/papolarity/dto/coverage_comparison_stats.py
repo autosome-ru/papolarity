@@ -1,6 +1,6 @@
 import dataclasses
 from .dataclass_tsv_serializable import DataclassTsvSerializable
-from ..profile_comparison import l1_distance_by_segment_counts, slope_by_segment_counts, segmentwise_sums
+from ..profile_comparison import l1_distance_by_segment_counts, slope_by_segment_counts, segmentwise_sums, polarity_diff
 
 @dataclasses.dataclass(frozen=True)
 class CoverageComparisonStats(DataclassTsvSerializable):
@@ -8,6 +8,7 @@ class CoverageComparisonStats(DataclassTsvSerializable):
     slope: float
     slopelog: float
     l1_distance: float
+    polarity_diff: float
 
     @classmethod
     def make_from_profiles(cls, transcript_id, control_profile, experiment_profile, segmentation):
@@ -24,5 +25,6 @@ class CoverageComparisonStats(DataclassTsvSerializable):
             'slope': slopes['center'],
             'slopelog': slopelogs['center'],
             'l1_distance': l1_distance_by_segment_counts(control_sums, experiment_sums),
+            'polarity_diff': polarity_diff(control_profile, experiment_profile),
         }
         return cls(**info)
