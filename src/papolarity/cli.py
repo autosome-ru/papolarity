@@ -2,7 +2,7 @@ import argparse
 from .version import __version__
 from .bin import get_coverage, pool_coverage, cds_annotation, clip_cds, \
                  coverage_features, choose_best, \
-                 compare_coverage, \
+                 compare_coverage, compare_coverage_extract, \
                  adjust_features, plot_distribution, \
                  flatten_coverage, cds_sequence
 
@@ -24,6 +24,7 @@ def configure_argparser(argparser=None):
         {'cmd': 'adjust_features', 'namespace': adjust_features, 'help': 'Make length-dependend adjustment of features'},
         {'cmd': 'flatten_coverage', 'namespace': flatten_coverage, 'help': 'Flatten coverage profiles by averaging data through given segments'},
         {'cmd': 'cds_sequence', 'namespace': cds_sequence, 'help': 'Extract CDS sequences from GTF annotation and genome assembly'},
+        {'cmd': 'compare_coverage_extract', 'namespace': compare_coverage_extract, 'help': '(temp) Coverage profile comparison info extraction'},
     ]
     for subparser_config in subparser_configs:
         invocation_fn = subparser_config['namespace'].invoke

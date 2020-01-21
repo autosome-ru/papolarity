@@ -410,3 +410,29 @@ papolarity cds_sequence "$ANNOTATION" \
                         --region-type cds \
                         --drop-5-flank $DROP_5_FLANK --drop-3-flank $DROP_3_FLANK \
                         --output-file cds_sequences.fa.gz
+
+################################################################################
+
+# Paper preparation
+# Intermediate values obtained for segments during slope calculation
+
+mkdir -p ./comparison_segments/raw;
+(
+  for EXPERIMENT in $EXPERIMENTS; do
+      echo papolarity compare_coverage_extract \
+                      ./cds_segmentation.bed.gz \
+                      "./cds_coverage/${CONTROL}.bedgraph.gz" \
+                      "./cds_coverage/${EXPERIMENT}.bedgraph.gz" \
+                      --prefix "${EXPERIMENT}_" \
+                      --output-file "comparison_segments/raw/${EXPERIMENT}.tsv"
+  done
+) | parallel
+
+# restrict these values to Eef2
+
+mkdir -p ./comparison_segments/eef2;
+for EXPERIMENT in $EXPERIMENTS; do
+    cat ./comparison_segments/raw/${EXPERIMENT}.tsv \
+        | grep 'ENSMUST00000047864.10' \
+        > ./comparison_segments/eef2/${EXPERIMENT}.tsv ;
+done
