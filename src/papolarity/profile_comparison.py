@@ -1,25 +1,17 @@
 from sklearn.linear_model import LinearRegression
 import numpy as np
 from math import log2
-from collections import namedtuple
 from .polarity_score import polarity_score
 from .utils import common_subsequence
-
-WeigthedPoints = namedtuple('WeigthedPoints', ['xs', 'ys', 'weights'])
 
 def comparison_infos(transcript_id, control_profile, experiment_profile, segmentation):
     assert len(control_profile) == len(experiment_profile) == segmentation.segmentation_length
     control_sums = segmentwise_sums(segmentation, control_profile)
     experiment_sums = segmentwise_sums(segmentation, experiment_profile)
-
-    slopes = slope_by_segment_counts(control_sums, experiment_sums, segmentation, log_mode=False)
-
-    # slope of logarithms
-    slopelogs = slope_by_segment_counts(control_sums, experiment_sums, segmentation, log_mode=True)
     info = {
         'transcript_id': transcript_id,
-        'slope': slopes['center'],
-        'slopelog': slopelogs['center'],
+        'slope': slope_by_segment_counts(control_sums, experiment_sums, segmentation, log_mode=False),
+        'slopelog': slope_by_segment_counts(control_sums, experiment_sums, segmentation, log_mode=True),
         'l1_distance': l1_distance_by_segment_counts(control_sums, experiment_sums),
         'polarity_diff': polarity_diff(control_profile, experiment_profile),
     }
@@ -58,16 +50,14 @@ def slope_by_segment_counts(control_sums, experiment_sums, segmentation, log_mod
     total_coverage_control = np.sum(control_sums)
     total_coverage_experiment = np.sum(experiment_sums)
     if (total_coverage_control == 0) or (total_coverage_experiment ==0):
-        return {'center': None}
-
-    center_info = WeigthedPoints([], [], [])
-    weighted_center_info = WeigthedPoints([], [], [])
-    every_point_info = WeigthedPoints([], [], [])
+        return None
 
     if log_mode:
         rate_transform = log2
     else:
         rate_transform = lambda x: x
+
+    xs, ys = [], []
     for (segment, control_segment_sum, experiment_segment_sum) in zip(segmentation.segments, control_sums, experiment_sums):
         if (control_segment_sum == 0) and (experiment_segment_sum == 0):
             continue
@@ -83,20 +73,17 @@ def slope_by_segment_counts(control_sums, experiment_sums, segmentation, log_mod
         rel_coord = coord / profile_len
 
         # mode: 'center'
-        center_info.xs.append(rel_coord)
-        center_info.ys.append(value)
-        center_info.weights.append(1)
+        xs.append(rel_coord)
+        ys.append(value)
 
-    return {
-        'center': slope_by_points(center_info.xs, center_info.ys, center_info.weights),
-    }
+    return slope_by_points(xs, ys)
 
-def slope_by_points(xs, ys, weights):
+def slope_by_points(xs, ys):
     if len(xs) < 2:
         return None
     xs = np.array(xs)
     model = LinearRegression()
-    model.fit(xs.reshape(-1, 1), ys, sample_weight=weights)
+    model.fit(xs.reshape(-1, 1), ys)
     return model.coef_[0]
 
 def l1_distance(control_profile, experiment_profile, segmentation):
