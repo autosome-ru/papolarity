@@ -1,26 +1,21 @@
 import argparse
-from ..utils import common_subsequence, tsv_string_empty_none
+from ..utils import tsv_string_empty_none
 from ..gzip_utils import open_for_write
 from ..dto.transcript_coverage import TranscriptCoverage
 from ..segmentation import Segmentation
 from ..dto.coverage_comparison_stats import CoverageComparisonStats
+from ..profile_comparison import align_profile_streams_to_segmentation
 
-def compare_coverage_streams(segmentations, control_coverage_profiles, experiment_coverage_profiles):
-    segmentation_and_coverage_profiles = [
-        segmentations,
-        control_coverage_profiles,
-        experiment_coverage_profiles,
-    ]
-
-    key_extractors = [
-        lambda segment: segment.chrom,
-        lambda transcript_coverage: transcript_coverage.transcript_id,
-        lambda transcript_coverage: transcript_coverage.transcript_id,
-    ]
-
-    transcript_stream = common_subsequence(segmentation_and_coverage_profiles, key=key_extractors, check_sorted=True)
-    for (transcript_id, (segmentation, control_coverage, experiment_coverage)) in transcript_stream:
-        yield CoverageComparisonStats.make_from_profiles(transcript_id, control_coverage.coverage, experiment_coverage.coverage, segmentation)
+def compare_coverage_streams(segmentation_stream, control_coverage_profiles, experiment_coverage_profiles):
+    aligned_stream = align_profile_streams_to_segmentation(
+        segmentation_stream,
+        [control_coverage_profiles, experiment_coverage_profiles]
+    )
+    for (transcript_id, (segmentation, control_coverage, experiment_coverage)) in aligned_stream:
+        yield CoverageComparisonStats.make_from_profiles(transcript_id,
+                                                        control_coverage.coverage,
+                                                        experiment_coverage.coverage,
+                                                        segmentation)
 
 def configure_argparser(argparser=None):
     if not argparser:

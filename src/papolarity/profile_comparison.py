@@ -3,6 +3,7 @@ import numpy as np
 from math import log2
 from collections import namedtuple
 from .polarity_score import polarity_score
+from .utils import common_subsequence
 
 WeigthedPoints = namedtuple('WeigthedPoints', ['xs', 'ys', 'weights'])
 
@@ -32,19 +33,19 @@ def slope_by_profiles(control_profile, experiment_profile, segmentation, log_mod
     return slope_by_segment_counts(control_sums, experiment_sums, segmentation, log_mode=log_mode)
 
 def slope_by_segment_counts(control_sums, experiment_sums, segmentation, log_mode=False):
+    assert len(segmentation.segments) == len(control_sums) == len(experiment_sums)
+    profile_len = segmentation.segmentation_length
+    num_segments = segmentation.num_segments
+
     total_coverage_control = np.sum(control_sums)
     total_coverage_experiment = np.sum(experiment_sums)
     if (total_coverage_control == 0) or (total_coverage_experiment ==0):
         return {'center': None}
 
-    assert len(segmentation.segments) == len(control_sums) == len(experiment_sums)
-    profile_len = segmentation.segmentation_length
-
     center_info = WeigthedPoints([], [], [])
     weighted_center_info = WeigthedPoints([], [], [])
     every_point_info = WeigthedPoints([], [], [])
 
-    num_segments = segmentation.num_segments
     if log_mode:
         rate_transform = log2
     else:
@@ -95,3 +96,24 @@ def l1_distance_by_segment_counts(control_sums, experiment_sums):
     control_normed = control_sums / control_profile_sum
     experiment_normed = experiment_sums / experiment_profile_sum
     return np.sum(np.abs(control_normed - experiment_normed))
+
+def _coverage_contig_fn(transcript_coverage):
+    return transcript_coverage.transcript_id
+
+def _segmentation_contig_fn(segment):
+    return segment.chrom
+
+def align_profile_streams(profile_streams):
+    '''
+    yields tuples: (transcript_id, profiles)
+    '''
+    keys = [_coverage_contig_fn] * len(profile_streams)
+    yield from common_subsequence(profile_streams, key=keys, check_sorted=True)
+
+def align_profile_streams_to_segmentation(segmentation_stream, profile_streams):
+    '''
+    yields tuples: (transcript_id, (segmentation, *profiles))
+    '''
+    streams = [segmentation_stream, *profile_streams]
+    keys = [_segmentation_contig_fn] + [_coverage_contig_fn] * len(profile_streams)
+    yield from common_subsequence(streams, key=keys, check_sorted=True)
