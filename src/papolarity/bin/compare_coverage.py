@@ -3,19 +3,7 @@ from ..utils import tsv_string_empty_none
 from ..gzip_utils import open_for_write
 from ..dto.transcript_coverage import TranscriptCoverage
 from ..segmentation import Segmentation
-from ..dto.coverage_comparison_stats import CoverageComparisonStats
-from ..profile_comparison import align_profile_streams_to_segmentation
-
-def compare_coverage_streams(segmentation_stream, control_coverage_profiles, experiment_coverage_profiles):
-    aligned_stream = align_profile_streams_to_segmentation(
-        segmentation_stream,
-        [control_coverage_profiles, experiment_coverage_profiles]
-    )
-    for (transcript_id, (segmentation, control_coverage, experiment_coverage)) in aligned_stream:
-        yield CoverageComparisonStats.make_from_profiles(transcript_id,
-                                                        control_coverage.coverage,
-                                                        experiment_coverage.coverage,
-                                                        segmentation)
+from ..profile_comparison import compare_coverage_streams
 
 def configure_argparser(argparser=None):
     if not argparser:
@@ -47,5 +35,5 @@ def invoke(args):
         header = ['transcript_id', *prefixed_feature_names]
         print('\t'.join(header), file=output_stream)
         for rec in compare_coverage_streams(segmentation_stream, control_coverage_profiles, experiment_coverage_profiles):
-            info = [rec.transcript_id, rec.slope, rec.slopelog, rec.l1_distance, rec.polarity_diff]
+            info = [rec[field] for field in ['transcript_id', *feature_names]]
             print(tsv_string_empty_none(info), file=output_stream)

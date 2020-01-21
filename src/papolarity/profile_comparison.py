@@ -7,6 +7,24 @@ from .utils import common_subsequence
 
 WeigthedPoints = namedtuple('WeigthedPoints', ['xs', 'ys', 'weights'])
 
+def comparison_infos(transcript_id, control_profile, experiment_profile, segmentation):
+    assert len(control_profile) == len(experiment_profile) == segmentation.segmentation_length
+    control_sums = segmentwise_sums(segmentation, control_profile)
+    experiment_sums = segmentwise_sums(segmentation, experiment_profile)
+
+    slopes = slope_by_segment_counts(control_sums, experiment_sums, segmentation, log_mode=False)
+
+    # slope of logarithms
+    slopelogs = slope_by_segment_counts(control_sums, experiment_sums, segmentation, log_mode=True)
+    info = {
+        'transcript_id': transcript_id,
+        'slope': slopes['center'],
+        'slopelog': slopelogs['center'],
+        'l1_distance': l1_distance_by_segment_counts(control_sums, experiment_sums),
+        'polarity_diff': polarity_diff(control_profile, experiment_profile),
+    }
+    return info
+
 def polarity_diff(control_profile, experiment_profile):
     control_polarity = polarity_score(control_profile)
     exp_polarity = polarity_score(experiment_profile)
@@ -117,3 +135,14 @@ def align_profile_streams_to_segmentation(segmentation_stream, profile_streams):
     streams = [segmentation_stream, *profile_streams]
     keys = [_segmentation_contig_fn] + [_coverage_contig_fn] * len(profile_streams)
     yield from common_subsequence(streams, key=keys, check_sorted=True)
+
+def compare_coverage_streams(segmentation_stream, control_coverage_profiles, experiment_coverage_profiles):
+    aligned_stream = align_profile_streams_to_segmentation(
+        segmentation_stream,
+        [control_coverage_profiles, experiment_coverage_profiles]
+    )
+    for (transcript_id, (segmentation, control_coverage, experiment_coverage)) in aligned_stream:
+        yield comparison_infos(transcript_id,
+                               control_coverage.coverage,
+                               experiment_coverage.coverage,
+                               segmentation)
