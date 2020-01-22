@@ -4,14 +4,16 @@ from math import log2
 from .polarity_score import polarity_score
 from .utils import common_subsequence
 
-def comparison_infos(transcript_id, control_profile, experiment_profile, segmentation):
+def comparison_infos(transcript_id, control_profile, experiment_profile, segmentation, quantile_q=0.5, quantile_threshold=0):
     assert len(control_profile) == len(experiment_profile) == segmentation.segmentation_length
     control_sums = segmentwise_sums(segmentation, control_profile)
     experiment_sums = segmentwise_sums(segmentation, experiment_profile)
     info = {
         'transcript_id': transcript_id,
-        'slope': slope_by_segment_counts(control_sums, experiment_sums, segmentation, log_mode=False),
-        'slopelog': slope_by_segment_counts(control_sums, experiment_sums, segmentation, log_mode=True),
+        'slope': slope_by_segment_counts(control_sums, experiment_sums, segmentation, log_mode=False,
+                                         quantile_q=quantile_q, quantile_threshold=quantile_threshold),
+        'slopelog': slope_by_segment_counts(control_sums, experiment_sums, segmentation, log_mode=True,
+                                            quantile_q=quantile_q, quantile_threshold=quantile_threshold),
         'l1_distance': l1_distance_by_segment_counts(control_sums, experiment_sums),
         'polarity_diff': polarity_diff(control_profile, experiment_profile),
     }
@@ -37,12 +39,13 @@ def segmentwise_sums(segmentation, profile):
     experiment_sums = segmentwise_sums(segmentation, experiment_profile)
 
 
-def slope_by_profiles(control_profile, experiment_profile, segmentation, log_mode=False):
+def slope_by_profiles(control_profile, experiment_profile, segmentation, log_mode=False, quantile_q=0.5, quantile_threshold=0):
     control_sums = segmentwise_sums(segmentation, control_profile)
     experiment_sums = segmentwise_sums(segmentation, experiment_profile)
-    return slope_by_segment_counts(control_sums, experiment_sums, segmentation, log_mode=log_mode)
+    return slope_by_segment_counts(control_sums, experiment_sums, segmentation, log_mode=log_mode,
+                                   quantile_q=quantile_q, quantile_threshold=quantile_threshold)
 
-def slope_by_segment_counts(control_sums, experiment_sums, segmentation, log_mode=False):
+def slope_by_segment_counts(control_sums, experiment_sums, segmentation, log_mode=False, quantile_q=0.5, quantile_threshold=0):
     assert len(segmentation.segments) == len(control_sums) == len(experiment_sums)
     profile_len = segmentation.segmentation_length
     num_segments = segmentation.num_segments
@@ -50,6 +53,8 @@ def slope_by_segment_counts(control_sums, experiment_sums, segmentation, log_mod
     total_coverage_control = np.sum(control_sums)
     total_coverage_experiment = np.sum(experiment_sums)
     if (total_coverage_control == 0) or (total_coverage_experiment ==0):
+        return None
+    if (np.quantile(control_sums, quantile_q) < quantile_threshold) or (np.quantile(experiment_sums, quantile_q) < quantile_threshold):
         return None
 
     if log_mode:
@@ -125,7 +130,7 @@ def align_profile_streams_to_segmentation(segmentation_stream, profile_streams):
     keys = [_segmentation_contig_fn] + [_coverage_contig_fn] * len(profile_streams)
     yield from common_subsequence(streams, key=keys, check_sorted=True)
 
-def compare_coverage_streams(segmentation_stream, control_coverage_profiles, experiment_coverage_profiles):
+def compare_coverage_streams(segmentation_stream, control_coverage_profiles, experiment_coverage_profiles, **options):
     aligned_stream = align_profile_streams_to_segmentation(
         segmentation_stream,
         [control_coverage_profiles, experiment_coverage_profiles]
@@ -134,4 +139,4 @@ def compare_coverage_streams(segmentation_stream, control_coverage_profiles, exp
         yield comparison_infos(transcript_id,
                                control_coverage.coverage,
                                experiment_coverage.coverage,
-                               segmentation)
+                               segmentation, **options)
