@@ -259,6 +259,7 @@ mkdir -p ./comparison/raw;
                       ./cds_segmentation.bed.gz \
                       "./cds_coverage/${CONTROL}.bedgraph.gz" \
                       "./cds_coverage/${EXPERIMENT}.bedgraph.gz" \
+                      --segment-coverage-quantile 0.25 1 \
                       --prefix "${EXPERIMENT}_" \
                       --output-file "comparison/raw/${EXPERIMENT}.tsv"
   done
