@@ -275,13 +275,21 @@ for EXPERIMENT in $EXPERIMENTS; do
         --out-file "./comparison/filtered/${EXPERIMENT}.tsv"
 done
 
+mkdir -p ./comparison/filtered_2;
+for EXPERIMENT in $EXPERIMENTS; do
+    csvtk --tabs filter2 \
+        "./comparison/filtered/${EXPERIMENT}.tsv" \
+        --filter "(\$${EXPERIMENT}_slope_rel_stddev <= 0.5) && (\$${EXPERIMENT}_slopelog_rel_stddev <= 0.5)" \
+        --out-file "./comparison/filtered_2/${EXPERIMENT}.tsv";
+done
+
 # 3.3.6. Adjust comparison statistics
 echo '3.3.6. Adjust comparison statistics'
 
 mkdir -p ./comparison/adjusted;
 for EXPERIMENT in $EXPERIMENTS; do
     papolarity adjust_features \
-        "comparison/filtered/${EXPERIMENT}.tsv" \
+        "comparison/filtered_2/${EXPERIMENT}.tsv" \
         --sort-field 'cds_length' \
         --fields "${EXPERIMENT}_slope" "${EXPERIMENT}_slopelog" "${EXPERIMENT}_l1_distance" "${EXPERIMENT}_polarity_diff" \
         --mode z-score \
