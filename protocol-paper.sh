@@ -115,7 +115,7 @@ echo '3.2.2. Filtering transcript lists'
 mkdir -p ./coverage_features/pooled
 csvtk --tabs filter2 \
    "coverage_features/raw/pooled.tsv" \
-   --filter '$pooled_mean_coverage >= 5' \
+   --filter '($pooled_mean_coverage >= 1) && ($pooled_coverage_q75 > 0)' \
    --out-file "coverage_features/pooled/pooled.filtered_1.tsv"
 
 
