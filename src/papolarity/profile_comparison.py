@@ -57,7 +57,7 @@ def slope_by_segment_counts(control_sums, experiment_sums, segmentation, log_mod
     else:
         rate_transform = lambda x: x
 
-    xs, ys = [], []
+    xs, ys, ws  = [], [], []
     for (segment, control_segment_sum, experiment_segment_sum) in zip(segmentation.segments, control_sums, experiment_sums):
         if (control_segment_sum == 0) and (experiment_segment_sum == 0):
             continue
@@ -75,15 +75,17 @@ def slope_by_segment_counts(control_sums, experiment_sums, segmentation, log_mod
         # mode: 'center'
         xs.append(rel_coord)
         ys.append(value)
+        ws.append(control_segment_sum + experiment_segment_sum)
 
-    return slope_by_points(xs, ys)
+    return slope_by_points(xs, ys, weights=None)
+    # return slope_by_points(xs, ys, weights=ws)
 
-def slope_by_points(xs, ys):
+def slope_by_points(xs, ys, weights=None):
     if len(xs) < 2:
         return None
     xs = np.array(xs)
     model = LinearRegression()
-    model.fit(xs.reshape(-1, 1), ys)
+    model.fit(xs.reshape(-1, 1), ys, sample_weight=weights)
     return model.coef_[0]
 
 def l1_distance(control_profile, experiment_profile, segmentation):
