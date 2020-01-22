@@ -2,16 +2,51 @@ from sklearn.linear_model import LinearRegression
 import numpy as np
 from math import log2
 from .polarity_score import polarity_score
-from .utils import common_subsequence
+from .utils import common_subsequence, drop_none
+
+def random_probabilities(num_bins):
+    values = np.random.rand(num_bins)
+    return values / values.sum()
 
 def comparison_infos(transcript_id, control_profile, experiment_profile, segmentation):
     assert len(control_profile) == len(experiment_profile) == segmentation.segmentation_length
     control_sums = segmentwise_sums(segmentation, control_profile)
     experiment_sums = segmentwise_sums(segmentation, experiment_profile)
+    control_total_coverage = np.sum(control_sums)
+    experiment_total_coverage = np.sum(experiment_sums)
+    bootstrap_fraction = 0.1
+    num_iterations = 30
+    slope_samples = []
+    slopelog_samples = []
+    for _ in range(num_iterations):
+        control_sums_corrected = control_sums + bootstrap_fraction * control_total_coverage * random_probabilities(len(control_sums))
+        experiment_sums_corrected = experiment_sums + bootstrap_fraction * experiment_total_coverage * random_probabilities(len(experiment_sums))
+        slope_sample = slope_by_segment_counts(control_sums_corrected, experiment_sums_corrected, segmentation, log_mode=False)
+        slopelog_sample = slope_by_segment_counts(control_sums_corrected, experiment_sums_corrected, segmentation, log_mode=True)
+        slope_samples.append(slope_sample)
+        slopelog_samples.append(slopelog_sample)
+
+    slope_samples = drop_none(slope_samples)
+    if len(slope_samples) > 0:
+        slope_stats = {'slope_min': np.min(slope_samples), 'slope_max': np.max(slope_samples), 'slope_median': np.median(slope_samples), 'slope_mean': np.mean(slope_samples), 'slope_stddev': np.std(slope_samples), 'slope_rel_stddev': np.abs(np.std(slope_samples) / np.mean(slope_samples))}
+    else:
+        slope_stats = {'slope_min': None, 'slope_max': None, 'slope_mean': None, 'slope_median': None, 'slope_stddev': None, 'slope_rel_stddev': None,}
+
+    slopelog_samples = drop_none(slopelog_samples)
+    if len(slopelog_samples) > 0:
+        slopelog_stats = {'slopelog_min': np.min(slopelog_samples), 'slopelog_max': np.max(slopelog_samples), 'slopelog_median': np.median(slopelog_samples), 'slopelog_mean': np.mean(slopelog_samples), 'slopelog_stddev': np.std(slopelog_samples), 'slopelog_rel_stddev': np.abs(np.std(slopelog_samples) / np.mean(slopelog_samples)),}
+    else:
+        slopelog_stats = {'slopelog_min': None, 'slopelog_max': None, 'slopelog_median': None, 'slopelog_mean': None, 'slopelog_stddev': None, 'slopelog_rel_stddev': None,}
+
+
     info = {
         'transcript_id': transcript_id,
+        'control_median': np.median(control_profile), 'experiment_median': np.median(experiment_profile),
+        'control_median_segments': np.median(control_sums), 'experiment_median_segments': np.median(experiment_sums),
         'slope': slope_by_segment_counts(control_sums, experiment_sums, segmentation, log_mode=False),
         'slopelog': slope_by_segment_counts(control_sums, experiment_sums, segmentation, log_mode=True),
+        'num_segments': segmentation.num_segments,'control_total_coverage': control_total_coverage,'experiment_total_coverage': experiment_total_coverage,
+        **slope_stats, **slopelog_stats,
         'l1_distance': l1_distance_by_segment_counts(control_sums, experiment_sums),
         'polarity_diff': polarity_diff(control_profile, experiment_profile),
     }

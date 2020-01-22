@@ -30,7 +30,12 @@ def invoke(args):
     experiment_coverage_profiles = TranscriptCoverage.each_in_file(args.coverage_experiment, header=False, dtype=int)
 
     with open_for_write(args.output_file) as output_stream:
-        feature_names = ['slope', 'slopelog', 'l1_distance', 'polarity_diff']
+        feature_names = ['slope', 'slopelog', 'l1_distance', 'polarity_diff',
+                        'slope_min', 'slope_max', 'slope_median', 'slope_mean', 'slope_stddev', 'slope_rel_stddev',
+                        'slopelog_min', 'slopelog_max', 'slopelog_median', 'slopelog_mean', 'slopelog_stddev', 'slopelog_rel_stddev',
+                        'control_median', 'experiment_median', 'control_median_segments', 'experiment_median_segments',
+                        'num_segments','control_total_coverage','experiment_total_coverage',
+        ]
         prefixed_feature_names = [f'{args.prefix}{name}' for name in feature_names]
         header = ['transcript_id', *prefixed_feature_names]
         print('\t'.join(header), file=output_stream)
