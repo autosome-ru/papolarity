@@ -8,9 +8,21 @@ For comparison versus a control sample, papolarity estimates an improved metric,
 ## Toolkit
 
 Papolarity provide a toolkit to perform different tasks necessary for processing transcriptomic data such as Ribo-Seq alignments.
+
+Installation:
+```
+python -m pip install papolarity
+```
+
+There're good chances that you'd also install pasio: `python -m pip install pasio`
+
 The package is organized as a single entry point for a set of subcommands.
 
-You can run it with: `papolarity [arguments]` or `python -m papolarity [arguments]` if you need to specify a certain version of python to run a package.
+You can run it with one of these commands:
+
+* `papolarity [arguments]`
+
+* `python -m papolarity [arguments]` - if you need to specify a certain version of python to run a package.
 
 Python 3.7+ is supported; probably this restriction will be relaxed later.
 
