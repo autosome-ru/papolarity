@@ -76,6 +76,23 @@ class Annotation:
         parts = self.parts_by_transcript[transcript_id]
         return [part  for part in parts  if part.type == 'UTR']
 
+    def transcript_3_utrs(self, transcript_id):
+        parts = self.parts_by_transcript[transcript_id]
+        # start_codons = [part  for part in parts  if part.type == 'start_codon']
+        cds_segments = [part  for part in parts  if part.type == 'CDS']
+        cds_segments = self.segments_ordered_5_to_3(cds_segments)
+        # we don't care, that pivot point is not gene start for "-" strand
+        # we need just any point in CDS to distinguish 5'-UTR from 3'-UTR
+        pivot = cds_segments[0].start
+        return [part  for part in parts  if part.type == 'UTR' and part.in_downstream_of(pivot)]
+
+    def transcript_5_utrs(self, transcript_id):
+        parts = self.parts_by_transcript[transcript_id]
+        cds_segments = [part  for part in parts  if part.type == 'CDS']
+        cds_segments = self.segments_ordered_5_to_3(cds_segments)
+        pivot = cds_segments[0].start
+        return [part  for part in parts  if part.type == 'UTR' and part.in_upstream_of(pivot)]
+
     def transcript_strand(self, transcript_id):
         return self.segments_strand(self.parts_by_transcript[transcript_id])
 
@@ -88,6 +105,8 @@ class Annotation:
 
     @classmethod
     def segments_ordered_5_to_3(cls, segments):
+        if len(segments) == 0:
+            return segments
         strand = cls.segments_strand(segments)
         reverse_order = (strand == '-')
         by_start_coordinate = lambda segment: segment.start
@@ -129,6 +148,10 @@ class Annotation:
             return self.segments_ordered_5_to_3(self.transcript_cds(transcript_id))
         elif feature_type == 'cds_with_stop':
             return self.segments_ordered_5_to_3(self.transcript_cds(transcript_id) + self.transcript_stop_codons(transcript_id))
+        elif feature_type == 'utr_5':
+            return self.segments_ordered_5_to_3(self.transcript_5_utrs(transcript_id))
+        elif feature_type == 'utr_3':
+            return self.segments_ordered_5_to_3(self.transcript_3_utrs(transcript_id))
         elif feature_type == 'full':
             # full, unspliced transcript
             return [self.transcript_by_id(transcript_id)]
