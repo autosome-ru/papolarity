@@ -115,25 +115,26 @@ def _coverage_contig_fn(transcript_coverage):
 def _segmentation_contig_fn(segment):
     return segment.chrom
 
-def align_profile_streams(profile_streams):
+def align_profile_streams(profile_streams, check_sorted=False):
     '''
     yields tuples: (transcript_id, profiles)
     '''
     keys = [_coverage_contig_fn] * len(profile_streams)
-    yield from common_subsequence(profile_streams, key=keys, check_sorted=True)
+    yield from common_subsequence(profile_streams, key=keys, check_sorted=check_sorted)
 
-def align_profile_streams_to_segmentation(segmentation_stream, profile_streams):
+def align_profile_streams_to_segmentation(segmentation_stream, profile_streams, check_sorted=False):
     '''
     yields tuples: (transcript_id, (segmentation, *profiles))
     '''
     streams = [segmentation_stream, *profile_streams]
     keys = [_segmentation_contig_fn] + [_coverage_contig_fn] * len(profile_streams)
-    yield from common_subsequence(streams, key=keys, check_sorted=True)
+    yield from common_subsequence(streams, key=keys, check_sorted=check_sorted)
 
-def compare_coverage_streams(segmentation_stream, control_coverage_profiles, experiment_coverage_profiles, **options):
+def compare_coverage_streams(segmentation_stream, control_coverage_profiles, experiment_coverage_profiles, check_sorted=False, **options):
     aligned_stream = align_profile_streams_to_segmentation(
         segmentation_stream,
-        [control_coverage_profiles, experiment_coverage_profiles]
+        [control_coverage_profiles, experiment_coverage_profiles],
+        check_sorted=check_sorted
     )
     for (transcript_id, (segmentation, control_coverage, experiment_coverage)) in aligned_stream:
         yield comparison_infos(transcript_id,

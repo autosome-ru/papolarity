@@ -21,6 +21,8 @@ def main():
     invoke(args)
 
 def invoke(args):
+    check_sorted = False
+
     if args.dtype == 'int':
         dtype = int
     elif args.dtype == 'float':
@@ -31,7 +33,7 @@ def invoke(args):
     coverage_streams = [TranscriptCoverage.each_in_file(coverage_fn, header=False, dtype=dtype) for coverage_fn in args.coverage_profiles]
 
     with open_for_write(args.output_file) as output_stream:
-        aligned_transcripts = align_iterators(coverage_streams, key=lambda transcript_coverage: transcript_coverage.transcript_id, check_sorted=True)
+        aligned_transcripts = align_iterators(coverage_streams, key=lambda transcript_coverage: transcript_coverage.transcript_id, check_sorted=check_sorted)
         for (transcript_id, transcript_coverage_profiles) in aligned_transcripts:
             if args.only_matching and not all(transcript_coverage_profiles):
                 continue

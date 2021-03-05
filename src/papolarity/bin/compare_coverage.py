@@ -28,6 +28,7 @@ def main():
     invoke(args)
 
 def invoke(args):
+    check_sorted = False
     segmentation_stream = Segmentation.each_in_file(args.segmentation, header=False)
 
     control_coverage_profiles = TranscriptCoverage.each_in_file(args.coverage_control, header=False, dtype=int)
@@ -40,7 +41,7 @@ def invoke(args):
         prefixed_feature_names = [f'{args.prefix}{name}' for name in feature_names]
         header = ['transcript_id', *prefixed_feature_names]
         print('\t'.join(header), file=output_stream)
-        for rec in compare_coverage_streams(segmentation_stream, control_coverage_profiles, experiment_coverage_profiles,
+        for rec in compare_coverage_streams(segmentation_stream, control_coverage_profiles, experiment_coverage_profiles, check_sorted=check_sorted,
                                             quantile_q=quantile_q, quantile_threshold=quantile_threshold):
             info = [rec[field] for field in ['transcript_id', *feature_names]]
             print(tsv_string_empty_none(info), file=output_stream)

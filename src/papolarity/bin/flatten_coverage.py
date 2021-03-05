@@ -25,6 +25,8 @@ def main():
     invoke(args)
 
 def invoke(args):
+    check_sorted = False
+
     if args.rounding == 'round':
         rounding = round
     elif args.rounding == 'ceil':
@@ -41,7 +43,7 @@ def invoke(args):
     segmentation_stream = Segmentation.each_in_file(args.segmentation, header=False)
 
     with open_for_write(args.output_file) as output_stream:
-        aligned_transcripts = align_iterators([segmentation_stream, transcript_coverage_stream], key=[lambda segment: segment.chrom, lambda transcript_coverage: transcript_coverage.transcript_id], check_sorted=True)
+        aligned_transcripts = align_iterators([segmentation_stream, transcript_coverage_stream], key=[lambda segment: segment.chrom, lambda transcript_coverage: transcript_coverage.transcript_id], check_sorted=check_sorted)
         for (transcript_id, (segmentation, transcript_coverage)) in aligned_transcripts:
             if transcript_coverage is None:
                 continue
