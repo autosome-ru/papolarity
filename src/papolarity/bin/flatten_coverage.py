@@ -17,6 +17,7 @@ def configure_argparser(argparser=None):
     argparser.add_argument('--only-matching', action='store_true', help="Don't pool coverage profiles of transcripts which are present not in all files")
     argparser.add_argument('--output-file', '-o', dest='output_file', help="Store results at this path")
     argparser.add_argument('--rounding', choices=['no', 'round', 'ceil', 'floor'], default='none', help="Rounding of float values (default: no rounding)")
+    argparser.add_argument('--check-sorted', choices=['no', 'case-sensitive', 'case-insensitive'], default='case-insensitive', help="Check if transcript intervals are properly ordered, i.e. contig names are sorted")
     return argparser
 
 def main():
@@ -25,7 +26,7 @@ def main():
     invoke(args)
 
 def invoke(args):
-    check_sorted = False
+    check_sorted = args.check_sorted
 
     if args.rounding == 'round':
         rounding = round

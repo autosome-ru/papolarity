@@ -20,6 +20,7 @@ def configure_argparser(argparser=None):
                                 'segment coverage less than 1.0')
     argparser.add_argument('--prefix', default='', help='Prefix of feature columns (to distinguish samples)')
     argparser.add_argument('--output-file', '-o', dest='output_file', help="Store results at this path")
+    argparser.add_argument('--check-sorted', choices=['no', 'case-sensitive', 'case-insensitive'], default='case-insensitive', help="Check if transcript intervals are properly ordered, i.e. contig names are sorted")
     return argparser
 
 def main():
@@ -28,7 +29,7 @@ def main():
     invoke(args)
 
 def invoke(args):
-    check_sorted = False
+    check_sorted = args.check_sorted
     segmentation_stream = Segmentation.each_in_file(args.segmentation, header=False)
 
     control_coverage_profiles = TranscriptCoverage.each_in_file(args.coverage_control, header=False, dtype=int)

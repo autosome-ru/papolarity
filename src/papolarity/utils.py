@@ -60,8 +60,14 @@ def align_iterators(iterators, key=lambda x: x, object_missing=None, check_sorte
         for idx in matching_idxs:
             old_key_value = key_values[idx]
             objects[idx], key_values[idx], exhausted[idx] = _next_unless_exhausted(iterators[idx], key[idx], exhausted[idx])
-            if check_sorted and (key_values[idx] is not _sentinel_key) and (key_values[idx] <= old_key_value):
-                raise ValueError(f"Iterator at index `{idx}` is not sorted: `{key_values[idx]}` follows `{old_key_value}`")
+            if check_sorted == 'case-sensitive':
+                if (key_values[idx] is not _sentinel_key) and (key_values[idx] <= old_key_value):
+                    raise ValueError(f"Iterator at index `{idx}` is not sorted (case-sensitive): `{key_values[idx]}` follows `{old_key_value}`")
+            elif check_sorted == 'case-insensitive':
+                # It's necessary to use upcase, not lowercase
+                # to be consistent with GNU coreutils `sort --ignore-case`
+                if (key_values[idx] is not _sentinel_key) and (key_values[idx].upper() <= old_key_value.upper()):
+                    raise ValueError(f"Iterator at index `{idx}` is not sorted (case-insensitive): `{key_values[idx].upper()}` follows `{old_key_value.upper()}`")
 
 def _next_unless_exhausted(iterator, key, exhausted, object_missing=None):
     '''

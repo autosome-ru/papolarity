@@ -62,7 +62,8 @@ mkdir -p ./coverage;
 (
   for SAMPLE in $SAMPLES; do
     echo papolarity get_coverage "./align/${SAMPLE}.bam" \
-                    --sort --dtype int \
+                    --sort case-insensitive \
+                    --dtype int \
                     --output-file "./coverage/${SAMPLE}.bedgraph.gz" ;
   done
 ) | parallel
@@ -71,7 +72,10 @@ mkdir -p ./coverage;
 # 3.1.3. Pooling coverage profiles
 echo '3.1.3. Pooling coverage profiles'
 
-papolarity pool_coverage ./coverage/*.bedgraph.gz --dtype int --output-file ./coverage/pooled.bedgraph.gz;
+papolarity pool_coverage ./coverage/*.bedgraph.gz \
+                          --dtype int \
+                          --check-sorted case-insensitive \
+                          --output-file ./coverage/pooled.bedgraph.gz ;
 
 
 # 3.1.4. Clipping profiles withing coding segments
@@ -233,6 +237,7 @@ mkdir -p ./cds_coverage_flattened;
     echo papolarity flatten_coverage \
                     ./cds_segmentation.bed.gz \
                     "./cds_coverage/${SAMPLE}.bedgraph.gz" \
+                    --check-sorted case-insensitive \
                     --only-matching \
                     --output-file "./cds_coverage_flattened/${SAMPLE}.bedgraph.gz";
   done
@@ -244,6 +249,7 @@ mkdir -p ./coverage_flattened;
     echo papolarity flatten_coverage \
                     ./segmentation.bed.gz \
                     "./coverage/${SAMPLE}.bedgraph.gz" \
+                    --check-sorted case-insensitive \
                     --only-matching \
                     --output-file "./coverage_flattened/${SAMPLE}.bedgraph.gz";
   done
@@ -259,6 +265,7 @@ mkdir -p ./comparison/raw;
                       ./cds_segmentation.bed.gz \
                       "./cds_coverage/${CONTROL}.bedgraph.gz" \
                       "./cds_coverage/${EXPERIMENT}.bedgraph.gz" \
+                      --check-sorted case-insensitive \
                       --segment-coverage-quantile 0.25 1 \
                       --prefix "${EXPERIMENT}_" \
                       --output-file "comparison/raw/${EXPERIMENT}.tsv"

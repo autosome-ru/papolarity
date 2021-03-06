@@ -13,6 +13,7 @@ def configure_argparser(argparser=None):
     argparser.add_argument('--output-file', '-o', dest='output_file', help="Store results at this path")
     argparser.add_argument('--output-mode', choices=['sum', 'mean'], default='sum', help="What to report")
     argparser.add_argument('--dtype', choices=['int', 'float'], default='int', help="Make int or float-valued coverage (default: %(default)s)")
+    argparser.add_argument('--check-sorted', choices=['no', 'case-sensitive', 'case-insensitive'], default='case-insensitive', help="Check if transcript intervals are properly ordered, i.e. contig names are sorted")
     return argparser
 
 def main():
@@ -21,7 +22,7 @@ def main():
     invoke(args)
 
 def invoke(args):
-    check_sorted = False
+    check_sorted = args.check_sorted
 
     if args.dtype == 'int':
         dtype = int
