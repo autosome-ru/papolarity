@@ -114,7 +114,8 @@ def call_coreutils_sort(cmds, tmpfn=None, stdin=None):
                                  stdout=subprocess.PIPE,
                                  stderr=subprocess.PIPE,
                                  stdin=subprocess.PIPE,
-                                 bufsize=BUFSIZE)
+                                 bufsize=BUFSIZE,
+                                 env={'LC_ALL': 'C'})
             for line in stdin:
                 p.stdin.write(line.encode())
             p.stdin.close()  # This is important to prevent deadlocks
@@ -131,7 +132,8 @@ def call_coreutils_sort(cmds, tmpfn=None, stdin=None):
                                  stdout=outfile,
                                  stderr=subprocess.PIPE,
                                  stdin=subprocess.PIPE,
-                                 bufsize=BUFSIZE)
+                                 bufsize=BUFSIZE,
+                                 env={'LC_ALL': 'C'})
             if hasattr(stdin, 'read'):
                 stdout, stderr = p.communicate(stdin.read())
                 p.stdin.close()
@@ -150,7 +152,8 @@ def call_coreutils_sort(cmds, tmpfn=None, stdin=None):
             p = subprocess.Popen(cmds,
                                  stdout=subprocess.PIPE,
                                  stderr=subprocess.PIPE,
-                                 bufsize=BUFSIZE)
+                                 bufsize=BUFSIZE,
+                                 env={'LC_ALL': 'C'})
             output = (i.decode('UTF-8') for i in p.stdout)
             stderr = None
 
@@ -162,7 +165,8 @@ def call_coreutils_sort(cmds, tmpfn=None, stdin=None):
             p = subprocess.Popen(cmds,
                                  stdout=outfile,
                                  stderr=subprocess.PIPE,
-                                 bufsize=BUFSIZE)
+                                 bufsize=BUFSIZE,
+                                 env={'LC_ALL': 'C'})
             stdout, stderr = p.communicate()
             output = tmpfn
             outfile.close()
