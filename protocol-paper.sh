@@ -39,6 +39,8 @@ echo '=== 3.1. Common preprocessing ==='
 echo '3.1.1. Preprocessing transcripts annotation'
 
 mkdir -p ./genome;
+
+# Note that column name can differ. E.g. `gene_biotype` instead of `gene_type`
 papolarity cds_annotation \
     "$ANNOTATION" \
     --attr-filter transcript_type=protein_coding \
