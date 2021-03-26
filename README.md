@@ -5,6 +5,9 @@ For a single sample, for each transcript papolarity allows for computing the cla
 
 For comparison versus a control sample, papolarity estimates an improved metric, the relative linear regression slope of coverage along transcript length. This involves de-noising by profile segmentation with a Poisson model (using [pasio](https://github.com/autosome-ru/pasio/)), and aggregation of Ribo-Seq coverage within segments, thus achieving reliable estimates of the regression slope.
 
+*Publication:* [Assessing Ribosome Distribution Along Transcripts with Polarity Scores and Regression Slope Estimates](https://pubmed.ncbi.nlm.nih.gov/33765281/). 
+Methods Mol Biol. 2021;2252:269-294. doi:10.1007/978-1-0716-1150-0_13
+
 ![papolarity logo](supplementary_files/papolarity_logo.png)
 
 ## Toolkit
