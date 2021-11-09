@@ -29,4 +29,4 @@ class CodingTranscriptInfo(DataclassTsvSerializable):
 
     @property
     def is_coding(self):
-        return self.cds_start and self.cds_stop
+        return (self.cds_start is not None) and (self.cds_stop is not None)
