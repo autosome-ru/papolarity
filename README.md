@@ -40,7 +40,7 @@ You can follow the protocol to get the idea how these tools are supposed to be u
 
 ## Protocol
 
-In our paper "Estimating positional distribution of ribosomes along transcripts: from polarity to regression slope" ([doi:will be soon](...)) we describe a protocol for Ribo-Seq analysis. In a file [protocol-paper.sh](https://github.com/autosome-ru/papolarity/blob/master/protocol-paper.sh) you can find a script we used in a paper to process our datasets. It's slightly modified for better readability compared to a paper, and is more easily customizable. Also it has a few additional commands to generate plots which are absent in paper. Steps are named after paper sections.
+In our paper "Assessing Ribosome Distribution Along Transcripts with Polarity Scores and Regression Slope Estimates" ([doi:10.1007/978-1-0716-1150-0_13](https://doi.org/10.1007/978-1-0716-1150-0_13)) we describe a protocol for Ribo-Seq analysis. In a file [protocol-paper.sh](https://github.com/autosome-ru/papolarity/blob/master/protocol-paper.sh) you can find a script we used in a paper to process our datasets. It's slightly modified for better readability compared to a paper, and is more easily customizable. Also it has a few additional commands to generate plots which are absent in paper. Steps are named after paper sections.
 
 You can use this protocol as is or change any parts you wish. As long as you comply with data formats and use consistent data (e.g. all files should be clipped in the same manner, or non-clipped at all), papolarity will work, order of commands, folder names, filenames and so on doesn't matter.
 
