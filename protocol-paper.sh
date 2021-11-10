@@ -59,6 +59,13 @@ csvtk --tabs cut ./genome/cds_features.tsv \
 
 # 3.1.2. Preparing coverage profiles
 echo '3.1.2. Preparing coverage profiles'
+# IF you generate coverage profiles by means of other tools (e.g. `bedtools genomecov` or
+#   `plastid make_wiggle`), make sure that the generated bedgraph is zero-padded
+#   (i.e. regions with zero coverage are explicitly indicated in the bedgraph through entire
+#   transcript length. See bedtools genomecov -bga option). It’s critically important
+#   for the following stages as papolarity would be unable to determine the full lengths
+#   of the transcripts in case the zeros are omitted.
+# !NOTE! `papolarity get_coverage` produces the profiles in the correct format
 
 mkdir -p ./coverage;
 (
