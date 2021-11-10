@@ -35,15 +35,23 @@ find ./fastq/*.fastq.gz -maxdepth 1 -type f -exec bash -c \
     > cutadapt.log
 
 # Alignment
+# NOTE! Genome-level multi-mapping reads are excluded at the alignment step.
+# It might be problematic to correctly filter out multi-mapping reads later from the transcriptomic
+# alignment as there are often many overlapping transcripts of a single gene
 
 mkdir align
 find ./fastq/*.fastq.gz -maxdepth 1 -type f -exec bash -c \
     's=$(basename {});bn=${s%.fastq.gz}; mkdir align/$bn' \;
 find ./trim/*.fastq.gz -maxdepth 1 -type f -exec bash -c \
-    's=$(basename {});bn=${s%.fastq.gz}; STAR --genomeDir ./genome/ --readFilesCommand zcat --quantMode TranscriptomeSAM --readFilesIn {} --outFileNamePrefix ./align/$bn/ --alignSJDBoverhangMin 1 --runThreadN 32 --outSAMtype BAM Unsorted' \;
+    's=$(basename {});bn=${s%.fastq.gz}; STAR --genomeDir ./genome/ --readFilesCommand zcat --quantMode TranscriptomeSAM --readFilesIn {} --outFileNamePrefix ./align/$bn/ --alignSJDBoverhangMin 1 --outFilterMultimapNmax 1 --runThreadN 32 --outSAMtype BAM Unsorted' \;
 
-# Filter uniquely mapped reads and perform sorting
+# Sort and index the read alignment.
+# !NOTE! The earlier version of the protocol suggested filtering multi-mapping reads with samtools.
+# We no longer recommend such filtering as it will exclude the reads mapped to alternative
+# overlapping transcripts of a single gene and significantly reduce the effective read coverage.
+# Instead, when considering only uniquely-mapped reads, we suggest to perform read mapping allowing
+# only single mapping locations, see STAR parameter `--outFilterMultimapNmax 1` above.
 
 find ./trim/*.fastq.gz -maxdepth 1 -type f -exec bash -c \
-    's=$(basename {});bn=${s%.fastq.gz}; samtools view -b -q 255 ./align/$bn/Aligned.toTranscriptome.out.bam | samtools sort - > ./align/$bn.bam ' \;
+    's=$(basename {});bn=${s%.fastq.gz}; samtools sort ./align/$bn/Aligned.toTranscriptome.out.bam > ./align/$bn.bam ' \;
 find ./align/*.bam -maxdepth 1 -type f -exec samtools index {} \;

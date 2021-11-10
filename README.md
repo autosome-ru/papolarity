@@ -45,3 +45,7 @@ In our paper "Assessing Ribosome Distribution Along Transcripts with Polarity Sc
 You can use this protocol as is or change any parts you wish. As long as you comply with data formats and use consistent data (e.g. all files should be clipped in the same manner, or non-clipped at all), papolarity will work, order of commands, folder names, filenames and so on doesn't matter.
 
 To run this pipeline, you should have several auxiliary tools installed: [csvtk](https://bioinf.shenwei.me/csvtk/), [GNU parallel](https://www.gnu.org/software/parallel/), and python package [pasio](https://github.com/autosome-ru/pasio/).
+
+## Important notes
+* Version 1.1.0 had a bug which caused incorrect results for transcripts
+* In the originally published protocol we recommended mapping the reads with STAR and then keeping only uniquely mapped reads by MAPQ filtering with samtools. This approach might be too stringent and even problematic as many reads initially mapped uniquely to the genome become multi-mappers in the alignment to the transcriptome (as there are often several overlapping transcripts per gene present in the transcript annotation). The updated version of the protocol solves this issue by requiring unique read mapping at the initial alignment step (see [protocol-paper-obtain-data.sh](protocol-paper-obtain-data.sh) script) w/o additional post-filtering. Other read mapping strategies (including keeping some multi-maps) might be also applicable in particular scenarios.
