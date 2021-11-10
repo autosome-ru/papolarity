@@ -2,7 +2,7 @@ import sys
 import dataclasses
 from ..gzip_utils import open_for_read, open_for_write
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True)
 class DataclassTsvSerializable:
     # Additional columns (goes after normal ones) which are to be printed/stored but not loaded'''
     computable_properties = [] # [('column_name', 'property_name'), ...]
