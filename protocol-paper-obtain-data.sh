@@ -35,6 +35,10 @@ find ./fastq/*.fastq.gz -maxdepth 1 -type f -exec bash -c \
     > cutadapt.log
 
 # Alignment
+# !!!!! ATTENTION !!!!!
+# Here one should make a transcriptomic alignment, NOT a genomic alignment
+# !!!!!           !!!!!
+#
 # NOTE! Genome-level multi-mapping reads are excluded at the alignment step.
 # It might be problematic to correctly filter out multi-mapping reads later from the transcriptomic
 # alignment as there are often many overlapping transcripts of a single gene
